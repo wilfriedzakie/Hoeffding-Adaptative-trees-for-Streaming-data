@@ -1,28 +1,55 @@
 Plan 
 
-Compute Hoeffding Tree
+Compute Hoeffding Bound
+    Args:
+        max_value (float): 
+        confidence (float):
+        weight (float): 
+    Returns:
+        (float): The Hoeffding bound.
+    
+return math.sqrt(((max_value * max_value) * math.log(1.0 / confidence)) / (2.0 * weight))
+
+
 
 Build Classifier
-Args : DataSet
+	Args : 
+		dataset (Dataset): The data to start training the classifier.
 
 Update Classifier
-Args(instance)
+Update the classifier with the given instance.
+        Args:
+            instance (Instance): The new instance to be used to train the classifier.
 
 
+			
+			
 Distribution for instance
 Args(instance) 
 	instance to calculate the class probabilities
 Return: List[float]
 
+
+
 Desactive Node	
 	prevent supplied node to grow
+	Args:
+        to_deactivate (ActiveHNode): The node to be deactivated.
+        parent (SplitNode): The parent of the node.
+        parent_branch (str): The branch leading from the parent to the node.
 
+		
+		
 Active node
 	allow supplied node to grow
+	Args:
+            to_activate (InactiveHNode): The node to be activated.
+            parent (SplitNode): The parent of the node.
+            parent_branch (str): The branch leading from the parent to the node.
 
 Split
-	from the supplied node
-best split 
-best split.sort
-
-do split 
+	Try a split from the supplied node.
+    Args:
+        node (ActiveHNode): The node to split.
+        parent (SplitNode): The parent of the node.
+        parent_branch (str): The branch leading from the parent to the node.
