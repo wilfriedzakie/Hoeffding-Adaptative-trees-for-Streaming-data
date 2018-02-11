@@ -1,16 +1,12 @@
 from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
 from skmultiflow.classification.naive_bayes import NaiveBayes
 from skmultiflow.classification.core.driftdetection.adwin import ADWIN
-from abc import ABCMeta,abstractmethod
+from abc import ABCMeta, abstractmethod
 from skmultiflow.core.utils.utils import *
-
-
-from utils_py import math_util
-
+from #skmultiflow.core.utils.file_scripts import Norma
 
 
 class HoeffdingAdaptiveTree(HoeffdingTree):
-
 
     def __init__(self, max_byte_size=33554432, memory_estimate_period=1000000, grace_period=200,
                  split_criterion='info_gain', split_confidence=0.0000001, tie_threshold=0.05, binary_split=False,
@@ -29,33 +25,59 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         self._train_weight_seen_by_model = 0.0
         self.updateSplitterCounts = 0.0
         self.byteSize = 0
-        self._estimationErrorWeight:ADWIN
-
-
+        self._estimationErrorWeight: ADWIN
 
     class NewNode(metaclass= ABCMeta):
 
         @abstractmethod
-        def show(self): raise NotImplementedError
+        def numberLeaves(self):
+            pass
 
+        @abstractmethod
+        def getErrorEstimation(self):
+            pass
 
-    class AdaLearningNode():
+        @abstractmethod
+        def getErrorWidth(self):
+            pass
+
+        @abstractmethod
+        def isNullError(self):
+            pass
+
+        @abstractmethod
+        def killTreeChilds(self, ht):
+            pass
+
+        @abstractmethod
+        def learnFromInstance(self, X,y, ht,parent:HoeffdingTree.SplitNode, parentBranch:int):
+            pass
+
+        @abstractmethod
+        def filterInstanceToLeaves(self,X,y, myparent:HoeffdingTree.SplitNode,
+                                   parentBranch:int, foundNodes, updateSplitterCounts:bool):
+            pass
+
+    class AdaLearningNode(HoeffdingTree.SplitNode,NewNode):
 
         def __init__(self):
             self.estimationErrorWeight: ADWIN
-            self.ErrorChange=False
-            self.alternateTree:HoeffdingTree.Node
+            self.ErrorChange = False
+            self.alternateTree: HoeffdingTree.Node
 
+
+        def __init__(self,alternateTree):
+            self.estimationErrorWeight: ADWIN
+            self.ErrorChange = False
+            self.alternateTree: HoeffdingTree.Node=alternateTree
 
 
         def calcByteSize(self):
             byteSize = super.calcByteSize()
 
             if self.estimationErrorWeight is not None:
-                 byteSize += self.estimationErrorWeight.measureByteSize()
+                byteSize += self.estimationErrorWeight.measureByteSize()
             return byteSize
-
-
 
         def getErrorEstimation(self):
             if self.estimationErrorWeight is not None:
@@ -63,13 +85,11 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             else:
                 return 0
 
-
         def getErrorWidth(self):
             w = 0.0
             if (self.isNullError() == False):
                 w = self.estimationErrorWeight.getWidth()
             return w
-
 
         def isNullError(self):
             return self.estimationErrorWeight is None
@@ -77,59 +97,63 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         def numberLeaves(self):
             return 1
 
-        def learnfromInstance(self,X,y, ht, parent:HoeffdingTree.SplitNode, parentBranch:int):
-            ClassPrediction=0
-            if(HoeffdingTree.SplitNode.filter_instance_to_leaf(X,parent,parentBranch).node is None):
-                ClassPrediction=HoeffdingTree.Node(HoeffdingTree.SplitNode.filter_instance_to_leaf(X,parent,parentBranch).node).get_class_votes(X,ht)
+        def learnfromInstance(self, X, y, ht, parent: HoeffdingTree.SplitNode, parentBranch: int):
+            ClassPrediction = 0
+            if (HoeffdingTree.SplitNode.filter_instance_to_leaf(X, parent, parentBranch).node is None):
+                ClassPrediction = HoeffdingTree.Node(
+                    HoeffdingTree.SplitNode.filter_instance_to_leaf(X, parent, parentBranch).node).get_class_votes(X,
+                                                                                                                   ht)
 
             blCorrect = (y == ClassPrediction)
 
-            if self.estimationErrorWeight is None :
+            if self.estimationErrorWeight is None:
                 self.estimationErrorWeight = ADWIN()
             oldError = self.getErrorEstimation()
-            self.ErrorChange = self.estimationErrorWeight.setInput(0.0 if blCorrect == True else  1.0)
+            self.ErrorChange = self.estimationErrorWeight.setInput(0.0 if blCorrect == True else 1.0)
 
-            if self.ErrorChange== True and oldError>self.getErrorEstimation():
-                self.ErrorChange=False
+            if self.ErrorChange == True and oldError > self.getErrorEstimation():
+                self.ErrorChange = False
 
             if (self.ErrorChange == True):
                 self.alternateTree = ht.newLearningNode()
-                ht.alternateTrees +=1
+                ht.alternateTrees += 1
             ##To check
-            elif self.alternateTree is None and ((NewNode) self.alternateTree).isNullError() == False :
-                if self.getErrorWidth() > 300 and ((NewNode) self.alternateTree).getErrorWidth() > 300:
+            elif self.alternateTree is None and (self.alternateTree).isNullError() == False:
+                if self.getErrorWidth() > 300 and (self.alternateTree).getErrorWidth() > 300:
                     oldErrorRate = self.getErrorEstimation()
-                    altErrorRate = ((NewNode) self.alternateTree).getErrorEstimation()
+                    altErrorRate = (self.alternateTree).getErrorEstimation()
                     fDelta = .05
-                    
-                    fn = 1.0 / (((NewNode) self.alternateTree).getErrorWidth()) + 1.0 / (self.getErrorWidth())
-                    bound = HoeffdingTree.compute_hoeffding_bound()
+
+                    fn = 1.0 / ((self.alternateTree).getErrorWidth()) + 1.0 / (self.getErrorWidth())
+                    bound = ht.compute_hoeffding_bound()
                     if (bound < oldErrorRate - altErrorRate):
-                        HoeffdingTree.activeLeafNodeCount -= self.numberLeaves()
-                        HoeffdingTree.activeLeafNodeCount += ((NewNode) self.alternateTree).numberLeaves()
-                        
-                        kill_tree_childs(HoeffdingTree)
-                        
+                        self.activeLeafNodeCount -= self.numberLeaves()
+                        self.activeLeafNodeCount += self.alternateTree.numberLeaves()
+
+                        self.kill_tree_childs(ht)##
+
                         if (parent is not None):
                             parent.setChild(parentBranch, self.alternateTree)
-                        else :
-                            HoeffdingTree._tree_root = ((AdaSplitNode) _tree_root).alternateTree
-                            
-                            HoeffdingTree.switchedAlternateTrees++
-                    elif bound < altErrorRate - oldErrorRate:
-                        isinstance(self.alternateTree, HoeffdingTree.ActiveLearningNode)
-                        
-                        self.alternateTree is None
-                        HoeffdingTree._active_leaf_node_cnt --
-                    elif isinstance(self.alternateTree, HoeffdingTree.InactiveLearningNode):
-                        self.alternateTree is None
-                        
-                        HoeffdingTree._inactive_leaf_node_cnt--
-                        
-                    else :
-                        ((AdaSplitNode) self.alternateTree).kill_tree_childs(HoeffdingTree)
-                        HoeffdingTree.prunedAlternateTrees++
+                        else:
 
+                            adaSplitNodeTree=HoeffdingAdaptiveTree.AdaSplitNode(ht.tree_root)
+
+                            ht._tree_root = ht._tree_root.alternateTree
+
+                            ht.switchedAlternateTrees +=1
+                    elif bound < altErrorRate - oldErrorRate:
+                        if isinstance(self.alternateTree, HoeffdingTree.ActiveLearningNode):
+                            self.alternateTree is None
+                            ht._active_leaf_node_cnt -=1
+
+                        elif isinstance(self.alternateTree, HoeffdingTree.InactiveLearningNode):
+                            self.alternateTree is None
+                            ht._inactive_leaf_node_cnt -=1
+
+                        else:
+                            (self.alternateTree).kill_tree_childs(ht)
+
+                        ht.prunedAlternateTrees +=1
 
         def get_class_votes(self, X, ht):
             prediction_option = HoeffdingAdaptiveTree.leafpredictionOption.getChosenIndex()
@@ -137,23 +161,23 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             if prediction_option is None:
                 dist = self.observedClassDistribution.getArrayCopy()
 
-            elif prediction_option == 1 :
+            elif prediction_option == 1:
 
                 dist = NaiveBayes.doNaiveBayesPrediction(X, self.observedClassDistribution, self.attributeObservers)
 
-            else :
-                if (self.mcCorrectWeight > self.nbCorrectWeight) :
+            else:
+                if (self.mcCorrectWeight > self.nbCorrectWeight):
                     dist = self.observedClassDistribution.getArrayCopy()
-                else :
+                else:
                     dist = NaiveBayes.doNaiveBayesPrediction(X, self.observedClassDistribution, self.attributeObservers)
-
 
             distSum = sum(dist)
             if distSum * self.getErrorEstimation() * self.getErrorEstimation() > 0.0:
                 normalize(dist, distSum * self.getErrorEstimation() * self.getErrorEstimation())
             return dist
 
-        def filter_instance_to_leaf(self, X, parent:HoeffdingTree.SplitNode, parent_branch, fn:HoeffdingTree.FoundNode, updateSplitterCounts):
+        def filter_instance_to_leaf(self, X, parent: HoeffdingTree.SplitNode, parent_branch,
+                                    fn: HoeffdingTree.FoundNode, updateSplitterCounts):
             fn.add(HoeffdingTree.FoundNode(self, parent, parent_branch))
 
         def new_learning_node(initial_class_observations):
@@ -167,11 +191,9 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                 self._tree_root = self._new_learning_node()
                 self._active_leaf_node_cnt = 1
 
-            #((NewNode) self._tree_root).learn_from_instance(X, self, None, -1)
+            # ((NewNode) self._tree_root).learn_from_instance(X, self, None, -1)
 
-
-       # def filter_instance_to_leaves(self,X,parent:HoeffdingTree.SplitNode, parentBranch:int, update_splitter_counts);
-
+    # def filter_instance_to_leaves(self,X,parent:HoeffdingTree.SplitNode, parentBranch:int, update_splitter_counts);
 
     def get_votes_for_instance(self, X):
         if self._tree_root is not None:
@@ -191,16 +213,11 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         else:
             return {}
 
-
-
     class AdaSplitNode(HoeffdingTree.SplitNode):
 
         def __init__(self, split_test, class_observations, size=-1):
             """SplitNode class constructor."""
             self.numLeaves = 0
-
-
-
 
         def calc_byte_size_including_subtree(self):
             byteSize = HoeffdingTree.measure_byte_size()
@@ -210,19 +227,17 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             if self.estimationErrorWeight is not None:
                 byteSize += self.estimationErrorWeight.measureByteSize()
 
-                for child in self._children :
+                for child in self._children:
                     if child is not None:
                         byteSize += child.calc_byte_size_including_subtree()
             return byteSize
 
-
         def number_leaves(self):
             numleaves = 0
-            for child in self._children :
+            for child in self._children:
                 if child is not None:
                     numleaves += child.number_leaves()
-            return numleaves +1
-
+            return numleaves + 1
 
         def getErrorEstimation(self):
             return self.estimationErrorWeight.getErrorEstimation()
@@ -230,20 +245,19 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         def isNullError(self):
             return self.estimationErrorWeight is None
 
-
         def getErrorWidth(self):
             self.w = 0.0
             if self.isNullError() is False:
                 w = self.estimationErrorWeight.getWidth()
             return w
 
-
         def kill_tree_childs(HoeffdingAdaptiveTree, self):
 
-            for child in self._children :
+            for child in self._children:
 
                 if child is not None:
-                    if isinstance(child, HoeffdingAdaptiveTree.AdaSplitNode) && HoeffdingAdaptiveTree.AdaSplitNode.alternateTree is not None:
+                    if isinstance(child,
+                                  HoeffdingAdaptiveTree.AdaSplitNode) and HoeffdingAdaptiveTree.AdaSplitNode.alternateTree is not None:
                         HoeffdingAdaptiveTree.AdaSplitNode.kill_tree_childs(HoeffdingTree)
 
                         HoeffdingTree.prunedAlternateTrees
@@ -257,12 +271,11 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
 
                     elif isinstance(child, HoeffdingTree.InactiveLearningNode):
-                         child is None
-                         self._active_leaf_node_cnt -= 1
+                        child is None
+                        self._active_leaf_node_cnt -= 1
 
-
-
-        def filter_instance_to_leaf(self, X, parent:HoeffdingTree.SplitNode, parent_branch, fn:HoeffdingTree.FoundNode, updateSplitterCounts):
+        def filter_instance_to_leaf(self, X, parent: HoeffdingTree.SplitNode, parent_branch,
+                                    fn: HoeffdingTree.FoundNode, updateSplitterCounts):
 
             if updateSplitterCounts:
                 self.get_observed_class_distribution(X)
@@ -277,14 +290,13 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                     return fn.FoundNode(None, self, childIndex)
 
                 if self.alteranteTree is not None:
-                    return  self.alternateTree.filter_instance_to_leaf(X, self, fn, updateSplitterCounts)
-
+                    return self.alternateTree.filter_instance_to_leaf(X, self, fn, updateSplitterCounts)
 
         def _new_learning_node(self, initial_class_observations=None):
 
             if initial_class_observations is None:
                 initial_class_observations = {}
-                if self._leaf_prediction == :
+                if self._leaf_prediction ==:
 
                     return self.ActiveLearningNode(initial_class_observations)
                 elif self._leaf_prediction == NaiveBayes:
@@ -292,25 +304,23 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             else:
                 return self.LearningNodeNBAdaptive(initial_class_observations)
 
-
-
         def train_on_instance_impl(X, self):
             if self._tree_root is None:
-             self.treeRoot = self.new_learning_node()
-             l = self._tree_root.leaf_for_instance(X, None, None)
-             leaf_node = l.the_node
-             if leaf_node is None:
-                 leaf_node = self._new_learning_node()
-                 l.parent_node.set_child(l.parent_branch, leaf_node)
+                self.treeRoot = self.new_learning_node()
+                l = self._tree_root.leaf_for_instance(X, None, None)
+                leaf_node = l.the_node
+                if leaf_node is None:
+                    leaf_node = self._new_learning_node()
+                    l.parent_node.set_child(l.parent_branch, leaf_node)
 
-                 if isinstance(leaf_node, HoeffdingTree.InactiveLearningNode):
-                     leaf_node.update_node(X)
-                     if isinstance(leaf_node, self._new_learning_node):
-                         leaf_node.update_node(X)
-                         weightSeen = leaf_node.weightSeen()
-                         if weightSeen - leaf_node.weight_seen_at_last_split_eval > self._grace_period:
-                             self.try_split(leaf_node, l.parent_node, l.parent_branch)
-                             leaf_node.weight_seen_at_last_split_eval = weightSeen
+                    if isinstance(leaf_node, HoeffdingTree.InactiveLearningNode):
+                        leaf_node.update_node(X)
+                        if isinstance(leaf_node, self._new_learning_node):
+                            leaf_node.update_node(X)
+                            weightSeen = leaf_node.weightSeen()
+                            if weightSeen - leaf_node.weight_seen_at_last_split_eval > self._grace_period:
+                                self.try_split(leaf_node, l.parent_node, l.parent_branch)
+                                leaf_node.weight_seen_at_last_split_eval = weightSeen
 
 
 
