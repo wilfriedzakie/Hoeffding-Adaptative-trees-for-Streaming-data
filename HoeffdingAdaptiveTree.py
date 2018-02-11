@@ -83,5 +83,10 @@ from abc import ABCMeta,abstractmethod
             if (self.ErrorChange == True):
                 self.alternateTree = ht.newLearningNode()
                 ht.alternateTrees +=1
-
+            ##To check
+            elif self.alternateTree is None and ((NewNode) self.alternateTree).isNullError() == False :
+                if self.getErrorWidth() > 300 and ((NewNode) self.alternateTree).getErrorWidth() > 300:
+                    oldErrorRate = self.getErrorEstimation()
+                    altErrorRate = ((NewNode) self.alternateTree).getErrorEstimation()
+                    fDelta = .05
     
