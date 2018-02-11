@@ -1,92 +1,456 @@
 from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
+from skmultiflow.classification.naive_bayes import NaiveBayes
 from skmultiflow.classification.core.driftdetection.adwin import ADWIN
-from abc import ABCMeta,abstractmethod
+from skmultiflow.classification.core.utils.utils import do_naive_bayes_prediction
+from abc import ABCMeta, abstractmethod
+from skmultiflow.core.utils.utils import *
+import math
+import random
+
+
+class HoeffdingAdaptiveTree(HoeffdingTree):
+
+    def __init__(self,*args, **kwarg):
+        """HoeffdingTree class constructor."""
+        super().__init__()
+        super(HoeffdingTree,self).__init__(*args, **kwarg)
+        self.treeRoot = None
+        self._active_leaf_node_cnt = 0
+        self._inactive_leaf_node_cnt = 0
+        self._inactive_leaf_byte_size_estimate = 0.0
+        self._active_leaf_byte_size_estimate = 0.0
+        self._train_weight_seen_by_model = 0.0
+        self.updateSplitterCounts = 0.0
+        self.byteSize = 0
 
     class NewNode(metaclass= ABCMeta):
 
         @abstractmethod
-        def show(self): raise NotImplementedError
+        def numberLeaves(self):
+            pass
 
-
-
-
-    class AdaSplitNode(HoeffdingTree.SplitNode):
-
-        def __init__(self):
-            self.estimationErrorWeight: ADWIN
-            self.ErrorChange=False
-            self.alternateTree:HoeffdingTree.Node
-
-        def getErrorWidth(self):
-            w = 0.0
-            if (self.isNullError() == False):
-                w = self.estimationErrorWeight.getWidth();
-            return w;
-
-
+        @abstractmethod
         def getErrorEstimation(self):
-            return self.estimationErrorWeight.getEstimation()
+            pass
+
+        @abstractmethod
+        def getErrorWidth(self):
+            pass
+
+        @abstractmethod
+        def isNullError(self):
+            pass
+
+        @abstractmethod
+        def killTreeChilds(self, ht):
+            pass
+
+        @abstractmethod
+        def learnFromInstance(self, X,y, weight, ht,parent:HoeffdingTree.SplitNode, parentBranch:int):
+            pass
+
+        @abstractmethod
+        def filterInstanceToLeaves(self,X,y, myparent,
+                                   parentBranch, foundNodes, updateSplitterCounts,weight):
+            pass
 
 
+
+    class AdaSplitNode(HoeffdingTree.SplitNode,NewNode):
+
+        def __init__(self, split_test, class_observations):
+            """SplitNode class constructor."""
+            HoeffdingTree.SplitNode.__init__(self, split_test,class_observations)
+            self.numLeaves = 0
+            self.estimationErrorWeight = ADWIN()
+            self.ErrorChange = False
+            self.alternateTree = HoeffdingTree.Node()
+            self.randomSeed = 1
+            self.classifierRandom = random.seed(self.randomSeed)
+
+
+        ##Valid
+        def calc_byte_size_including_subtree(self):
+            byteSize = self.__sizeof__()
+
+            if self.alternateTree is not None:
+                byteSize += self.alteranteTree.calc_byte_size_including_subtree()
+            if self.estimationErrorWeight is not None:
+                byteSize += self.estimationErrorWeight.get_length_estimation()
+
+                for child in self._children:
+                    if child is not None:
+                        byteSize += child.calc_byte_size_including_subtree()
+            return byteSize
+
+        #Valid +1
+        def number_leaves(self):
+            numleaves = 0
+            for child in self._children:
+                if child is not None:
+                    numleaves += child.number_leaves()
+            return numleaves +1
+
+        #valid
+        def getErrorEstimation(self):
+            return self.estimationErrorWeight.estimation
+
+        # valid
         def isNullError(self):
             return self.estimationErrorWeight is None
-        
-            class AdaSplitNode(HoeffdingTree.SplitNode):
 
-        def __init__(self):
-            self.estimationErrorWeight: ADWIN
-            self.ErrorChange=False
-            self.alternateTree:HoeffdingTree.Node
-
+        #valid
         def getErrorWidth(self):
             w = 0.0
-            if (self.isNullError() == False):
-                w = self.estimationErrorWeight.getWidth();
-            return w;
+            if self.isNullError() is False:
+                w = self.estimationErrorWeight._width
+            return w
 
+        ##checked Partially and to do
+        def learnFromInstance(self, X, y, weight, ht, parent, parent_branch):
+            class_prediction = 0
+            #k = np.random.poisson(1.0,self.classifierRandom)
+            if self.filterInstanceToLeaves(X, parent, parent_branch).node is not None:
+                 res=self.filterInstanceToLeaves(X, y, parent, parent_branch).node.get_class_votes(X, ht)
 
-        def getErrorEstimation(self):
-            return self.estimationErrorWeight.getEstimation()
+                 #Get the majority vote
+                 max=0
+                 maxIdx=0
+                 for k ,v in res.items():
+                     if v>max:
+                         maxIdx=k
+                 class_prediction =maxIdx
 
+            bl_correct = (y == class_prediction)
 
-        def isNullError(self):
-            return self.estimationErrorWeight is None
-
-
-        def numberLeaves():
-
-            numLeaves = 0;
-            for (Node child: self.children):
-                if (child != null):
-                        numLeaves += ((NewNode) child).numberLeaves()
-            return numLeaves + 1;
-
-
-        def getErrorEstimation(self):
-            return self.estimationErrorWeight.getEstimation()
-
-        def learnfromInstance(self,X,y, ht, parent:HoeffdingTree.SplitNode, parentBranch:int):
-            ClassPrediction=0
-            if(HoeffdingTree.SplitNode.filter_instance_to_leaf(X,parent,parentBranch).node is None):
-                ClassPrediction=HoeffdingTree.Node(HoeffdingTree.SplitNode.filter_instance_to_leaf(X,parent,parentBranch).node).get_class_votes(X,ht)
-
-            blCorrect = (y == ClassPrediction)
-
-            if self.estimationErrorWeight is None :
+            if self.estimationErrorWeight is None:
                 self.estimationErrorWeight = ADWIN()
-            oldError = self.getErrorEstimation()
-            self.ErrorChange = self.estimationErrorWeight.setInput(0.0 if blCorrect == True else  1.0)
 
-            if self.ErrorChange== True and oldError>self.getErrorEstimation():
-                self.ErrorChange=False
+            old_error = self.get_error_estimation()
 
-            if (self.ErrorChange == True):
-                self.alternateTree = ht.newLearningNode()
-                ht.alternateTrees +=1
+            self.error_change = self.estimationErrorWeight.add_element(0.0 if bl_correct == True else 1.0)
+
+            ##to check self_error
+            if self.error_change == True and old_error > self.get_error_estimation():
+                self.error_change == False
+
+            if self.error_change:
+                self.alternateTree = ht.new_learning_node()
+                ht.alternateTrees += 1
+
             ##To check
-            elif self.alternateTree is None and ((NewNode) self.alternateTree).isNullError() == False :
-                if self.getErrorWidth() > 300 and ((NewNode) self.alternateTree).getErrorWidth() > 300:
-                    oldErrorRate = self.getErrorEstimation()
-                    altErrorRate = ((NewNode) self.alternateTree).getErrorEstimation()
-                    fDelta = .05
-    
+            elif self.alternateTree is not None and self.alternateTree.is_null_error() == False:
+                if self.get_error_width() > 300 and self.alternateTree.get_error_width() > 300:
+                    old_error_rate = self.get_error_estimation()
+                    alt_error_rate = self.alternateTree.get_error_estimation()
+                    fDelta = 0.05
+                    fn = 1.0 / (self.alternateTree.get_error_width()) + 1.0 / (self.get_error_width())
+
+                    bound = 1.0 / math.sqrt(2.0 * old_error_rate * (1.0 - old_error_rate) * math.log(2.0 / fDelta)*fn)
+
+                    if bound < old_error_rate - alt_error_rate:
+                        ht._active_leaf_node_cnt -=  self.numberLeaves()
+                        ht._active_leaf_node_cnt +=  self.alternateTree.numberLeaves()
+
+                        self.killTreeChilds(ht)
+
+                        if parent is not None:
+                            parent.setChild(parent_branch, self.alternateTree)
+                        else:
+                            ht.treeRoot = ht.treeRoot.alternateTree
+                        ht.switchedAlternateTrees += 1
+
+                    elif bound < alt_error_rate - old_error_rate:
+                        if isinstance(self.alternateTree, HoeffdingTree.ActiveLearningNode):
+                            self.alternateTree is None
+                            self._active_leaf_node_cnt -= 1
+
+                        elif isinstance(self.alternateTree, HoeffdingTree.InactiveLearningNode):
+                            self.alternateTree is None
+                            self._inactive_leaf_node_cnt -= 1
+
+                        else:
+                            self.alternateTree.killTreeChilds(ht)
+                        ht.prunedAlternateTrees += 1
+
+            if self.alternateTree is not None:
+                self.alternateTree.learnFromInstance(X, y, weight, ht, parent, parent_branch)
+
+            child_branch = self.instance_child_index(X)
+            child = self.get_child(child_branch)
+
+            if child is not None:
+                child.learnFromInstance(X, y, weight, ht, self, child_branch) #tricky
+
+        #valid
+        def killTreeChilds(self, ht):
+            for child in self._children:
+                if child is not None:
+                    if isinstance(child, HoeffdingAdaptiveTree.AdaSplitNode) and child.alternateTree is not None:
+                        child.alternateTree.killTreeChilds(HoeffdingTree)
+                        ht.prunedAlternateTrees+=1
+
+                    if isinstance(child, HoeffdingAdaptiveTree.AdaSplitNode):
+                        child.killTreeChilds(ht)
+
+                    if isinstance(child, HoeffdingTree.ActiveLearningNode):
+                        child is None
+                        ht._active_leaf_node_cnt -= 1
+
+
+                    elif isinstance(child, HoeffdingTree.InactiveLearningNode):
+                        child is None
+                        ht._active_leaf_node_cnt -= 1
+
+        #validated ##Check if mistake with observed class distribution
+        def filterInstanceToLeaves(self, X, y, myparent, parentBranch,
+                                   foundNodes, updateSplitterCounts,weight):
+            if foundNodes is None:
+                foundNodes=[]
+
+            if updateSplitterCounts:
+                self._observed_class_distribution[y] = 0.0
+                self._observed_class_distribution[y] += weight
+
+                child_index = self.instance_child_index(X)
+
+                if child_index >= 0:
+                    child = self.get_child(child_index)
+
+                    if child is not None:
+                        child.filterInstanceToLeaves(X, y, myparent,parentBranch,foundNodes, updateSplitterCounts,weight)
+                else:
+                    foundNodes.append(HoeffdingTree.FoundNode(None, self, child_index))
+
+                if self.alteranteTree is not None:
+                    return self.alternateTree.filterInstanceToLeaves(X, y, self,  -999, foundNodes, updateSplitterCounts,weight)
+
+        ##Valid (missing)
+        def get_votes_for_instance(self, X):
+            result = {}
+            if self._tree_root is not None:
+                found_node = self.filter_instance_to_leaves(X, None, -1, False)
+                for fn in found_node:
+                    if fn.parent_branch != -999:
+                        leaf_node = fn.node
+                        if leaf_node is None:
+                            leaf_node = fn.parent
+                        dist = leaf_node.get_class_votes(X, self)
+                        result.update(dist)  # add elements to dictionary
+            return result
+
+            # Override HoeffdingTree
+
+    def _new_learning_node(self, initial_class_observations=None):
+        return self.AdaLearningNode(initial_class_observations)
+
+        ##Valid (missing)
+        def new_split_node(self, split_test, class_observations, size):
+            return self.AdaSplitNode(split_test, class_observations, size)
+
+
+    #-------------------------------------------------------------------------#
+
+    class AdaLearningNode(HoeffdingTree.LearningNodeNBAdaptive, NewNode):
+
+            #Valid
+            def __init__(self, initialClassObservations):
+                HoeffdingTree.LearningNodeNBAdaptive.__init__(self, initialClassObservations)
+                self.estimationErrorWeight= ADWIN()
+                self.ErrorChange = False
+                #self.alternateTree=HoeffdingTree.Node()
+                self.randomSeed = 1
+                self.classifierRandom = random.seed(self.randomSeed)
+
+            # valid
+            def calcByteSize(self):
+                byteSize = self.__sizeof__()
+                if self.estimationErrorWeight is not None:
+                    byteSize += self.estimationErrorWeight.get_length_estimation()
+                return byteSize
+
+            ##valid
+            def numberLeaves(self):
+                return 1
+
+            ##checked
+            def getErrorEstimation(self):
+                if self.estimationErrorWeight is not None:
+                    return self.estimationErrorWeight._estimation
+                else:
+                    return 0
+
+            ##Valid
+            def getErrorWidth(self):
+                return self.estimationErrorWeight._width
+
+            ##Valid
+            def isNullError(self):
+                return self.estimationErrorWeight is None
+
+            # Valid
+            def killTreeChilds(self, ht):
+                pass
+
+            # Valid fully ##to do weight
+            def learnFromInstance(self, X, y, weight, ht, parent, parentBranch):
+                ClassPrediction = 0
+
+                k = np.random.poisson(1.0, self.classifierRandom)
+
+                if (k > 0):
+                    weight = weight * k
+
+                vote = self.get_class_votes(X, ht)
+
+                # Get the majority vote
+                max = 0
+                maxIdx = 0
+                for k, v in vote.items():
+                     if v > max:
+                         maxIdx = k
+                ClassPrediction = maxIdx
+
+
+                blCorrect = (y == ClassPrediction)
+
+                if (self.estimationErrorWeight is None):
+                    self.estimationErrorWeight = ADWIN()
+
+                oldError = self.getErrorEstimation()
+
+                self.ErrorChange = self.estimationErrorWeight.add_element(0.0 if blCorrect == True else 1.0)
+
+                if self.ErrorChange == True and oldError > self.getErrorEstimation():
+                    self.ErrorChange = False
+
+                super().learn_from_instance(X, y, weight, ht)
+
+                weight_seen = self.get_weight_seen()
+
+                if weight_seen - self.get_weight_seen_at_last_split_evaluation() >= ht.grace_period:
+                    ht._attempt_to_split(self, parent, parentBranch)
+                    self.set_weight_seen_at_last_split_evaluation(weight_seen)
+
+            # Checked ##To do Normalize
+
+            def normalize(sum, dist):
+                if sum == 0:
+                    if math.isnan(sum):
+                        for k, v in dist.items():
+                            v = v / sum
+
+            #Valid (missing)
+            def get_class_votes(self, X, ht):
+
+                #prediction_option = ht.leafpredictionOption
+                dist = {}
+                #if prediction_option is None:
+                 #   dist = self._observed_class_distribution.getArrayCopy()
+
+                #elif prediction_option == 1:
+
+                 #   dist = NaiveBayes.doNaiveBayesPrediction(X, self.observedClassDistribution, self.attributeObservers)
+
+                #else:
+                if (self._mc_correct_weight > self._nb_correct_weight):
+                        dist = self._observed_class_distribution.getArrayCopy()
+                else:
+                        dist = do_naive_bayes_prediction(X, self._observed_class_distribution,
+                                                                 self._attribute_observers)
+
+                distSum = sum(dist.values())
+                distSum=0
+                for key in dist:
+                    distSum+=dist[key]
+                
+                ds = distSum * self.getErrorEstimation() * self.getErrorEstimation()
+                if ds > 0.0:
+                    self.normalize(ds, dist)
+                return dist
+
+            ##Valid
+            def filterInstanceToLeaves(self, X, parent, parent_branch,
+                                       foundNodes, updateSplitterCounts,weight):
+                if foundNodes is None:
+                    foundnodes=[]
+                foundnodes.append(HoeffdingTree.FoundNode(self, parent, parent_branch))
+
+            # Checked notimp
+
+            ##Checked notimp
+            def new_split_node(split_test, class_observations):
+                return HoeffdingAdaptiveTree.AdaSplitNode(split_test, class_observations)
+
+            # Checked notimp
+            def new_learning_node(self, initial_class_observations):
+                return HoeffdingAdaptiveTree.AdaSplitNode(initial_class_observations)
+
+            ##Checked notimp
+            def trainOnInstanceImpl(self, X):
+                if self.treeRoot is None:
+                    self.treeRoot = self.new_learning_node()
+                    self._active_leaf_node_cnt = 1
+                self.treeRoot.learnFromInstance(X, self, None, -1)
+
+        ##Checked notimp
+    #Valid
+    def get_votes_for_instance(self, X):
+        if self.treeRoot is not None:
+            found_nodes = self.treeRoot.filterInstanceToLeaves(X, None, -1, False)
+
+            result = []
+            predictionPaths = 0
+
+            for found_node in found_nodes:
+                if found_node.parent != -999:
+                    leaf_node = found_node.node
+                    if leaf_node is None:
+                        leaf_node = found_node.parent
+                    dist = leaf_node.get_class_votes(X, self)
+
+            result.append(dist)
+            return result
+        else:
+            return {}
+
+
+#-----------------------------------------------------------------------------# #
+
+    def partial_fit(self, X, y, classes=None, weight=None):
+        if y is not None:
+            if weight is None:
+                weight = np.array([1.0])
+            row_cnt, _ = get_dimensions(X)
+            wrow_cnt, _ = get_dimensions(weight)
+            if row_cnt != wrow_cnt:
+                weight = [weight[0]] * row_cnt
+            for i in range(row_cnt):
+                if weight[i] != 0.0:
+                    self._train_weight_seen_by_model += weight[i]
+                    self._partial_fit(X[i], y[i], weight[i])
+
+    def _partial_fit(self, X, y, weight):
+        if self.treeRoot is None:
+            self.treeRoot = self._new_learning_node()
+            self._active_leaf_node_cnt = 1
+        self.treeRoot.learnFromInstance(X,y,weight,self,None,-1)
+
+
+    def filter_instance_to_leaves(self, X, split_parent, parent_branch, update_splitter_counts):
+        nodes = []
+        self._tree_root.filter_instance_to_leaves(X, split_parent, parent_branch, update_splitter_counts, nodes)
+        return nodes
+
+    def predict(self, X):
+        r, _ = get_dimensions(X)
+        predictions = []
+        for i in range(r):
+            votes = self.get_votes_for_instance(X[i])
+            if votes == {}:
+                # Tree is empty, all classes equal, default to zero
+                predictions.append(0)
+            else:
+                predictions.append(max(votes, key=votes.get))
+        return predictions
+
