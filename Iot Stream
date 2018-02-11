@@ -1,62 +1,17 @@
- def learn_from_instance(self,X,y, ht, parent:HoeffdingTree.SplitNode, parent_branch:int):
-            class_prediction =0
-            if HoeffdingTree.SplitNode.filter_instance_to_leaf(X,y,parent,parent_branch).node is None :
-                class_prediction = HoeffdingTree.Node(HoeffdingTree.SplitNode.filter_instance_to_leaf(X,y,parent,parent_branch).node).get_class_votes(X,ht)
+ def filter_instance_to_leaf(self, X,y, parent:HoeffdingTree.SplitNode, parent_branch,
+                                    fn:HoeffdingTree.FoundNode, updateSplitterCounts):
 
-            bl_correct = (y == class_prediction)
+            if updateSplitterCounts:
+                self.get_observed_class_distribution(X,y)
+                child_index = self.instance_child_index(X,y)
 
-            if self.estimationErrorWeight is None :
-                self.estimationErrorWeight = ADWIN()
-            old_error = self.get_error_estimation()
-            self.error_change = self.estimationErrorWeight.setInput(0.0 if bl_correct == True else  1.0)
-
-            if self.error_change == True and old_error > self.get_error_estimation():
-                self.error_change == False
-
-            if self.error_change:
-                self.alternateTree = ht.newLearningNode()
-                ht.alternateTrees +=1
-
-
-            ##To check
-            elif self.alternateTree is None and (self.alternateTree).is_null_error() == False :
-                if self.get_error_width() > 300 and  self.alternateTree.get_error_width() > 300:
-                    old_error_rate = self.get_error_estimation()
-                    alt_error_rate =  self.alternateTree.get_error_estimation()
-                    fDelta = .05
-
-                    fn = 1.0 / (self.alternateTree.get_error_width()) + 1.0 / (self.get_error_width())
-                    bound = HoeffdingTree.compute_hoeffding_bound()
-                    if bound < old_error_rate - alt_error_rate:
-                        self._active_leaf_node_cnt -= self.numberLeaves()
-                        self._active_leaf_node_cnt += self.alternateTree.numberLeaves()
-
-                        kill_tree_childs(HoeffdingTree)
-
-                        if parent is not None:
-                            parent.setChild(parent_branch, self.alternateTree)
-                        else :
-                            HoeffdingTree._tree_root = HoeffdingAdaptiveTree.AdaSplitNode._tree_root.alternateTree
-
-                            HoeffdingTree.switchedAlternateTrees += 1
-                    elif bound < alt_error_rate - old_error_rate:
-                        if isinstance(self.alternateTree, HoeffdingTree.ActiveLearningNode):
-                            self.alternateTree is None
-                            self._active_leaf_node_cnt -= 1
-
-                    elif isinstance(self.alternateTree, HoeffdingTree.InactiveLearningNode):
-                        self.alternateTree is None
-                        self._inactive_leaf_node_cnt -= 1
-
-                    else :
-                        ((HoeffdingAdaptiveTree.AdaSplitNode) self.alternateTree).kill_tree_childs(HoeffdingTree)
-                        self.prunedAlternateTrees += 1
-
-                    if self.alternateTree is not None:
-                        self.alternateTree.learn_from_instance(weight_instance, ht, parent, parent_branch)
-
-                    child_branch = self.instance_child_index(X,y)
-                    child = self.get_child(child_branch)
+                if child_index >= 0:
+                    child = self.get_child(child_index)
 
                     if child is not None:
-                        child.filter_instance_to_leaf(weight_instance, ht, self, child_branch)
+                        return child.filter_instance_to_leaf(X,y, self, child_index, fn, updateSplitterCounts)
+                else:
+                    return fn.FoundNode(None, self, child_index)
+
+                if self.alteranteTree is not None:
+                    return  self.alternateTree.filter_instance_to_leaf(X,y, self, fn, updateSplitterCounts)
