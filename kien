@@ -1,3 +1,22 @@
+class HoeffdingAdaptiveTree(HoeffdingTree):
+    def __init__(self, max_byte_size=33554432, memory_estimate_period=1000000, grace_period=200,
+                 split_criterion='info_gain', split_confidence=0.0000001, tie_threshold=0.05, binary_split=0,
+                 stop_mem_management=0, remove_poor_atts=0, no_preprune=0, leaf_prediction='mc',
+                 nb_threshold=0, nominal_attributes=None):
+        HoeffdingTree.__init__(self, max_byte_size, memory_estimate_period, grace_period,
+                               split_criterion, split_confidence, tie_threshold, binary_split,
+                               stop_mem_management, remove_poor_atts, no_preprune, leaf_prediction,
+                               nb_threshold, nominal_attributes)
+        self.alternateTree = None
+        self.prunedAlternateTrees = None
+        self.switchedAlternateTrees = None
+
+    def trainOnInstanceImpl(self, X, y, weight):
+        if self._tree_root is None:
+            self._tree_root = newLearningNode()
+            self.activeLeafNodeCount = 1
+        self._tree_root.learn_from_instance(X, weight, self, None, -1)
+
 
     def killTreeChilds(ht):
         for child in self._children:
