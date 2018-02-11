@@ -1,1 +1,15 @@
 
+    def killTreeChilds(ht):
+        for child in self._children:
+            if child is not None:
+                if isinstance(child, AdaSplitNode) and (child.alternateTree is not None):
+                    child.alternateTree.killTreeChilds(ht)
+                    ht.prunedAlternateTrees += 1
+                if isinstance(child, AdaSplitNode):
+                    child.killTreeChilds(ht)
+                if isinstance(child, ActiveLearningNode):
+                    child = None
+                    ht._active_leaf_node_cnt -= 1
+                elif isinstance(child, InactiveLearningNode):
+                    child = None
+                    ht._inactive_leaf_node_cnt -= 1
