@@ -4,7 +4,6 @@ from skmultiflow.classification.lazy.knn_adwin import KNNAdwin, KNN
 from sklearn.linear_model.stochastic_gradient import SGDClassifier
 from skmultiflow.options.file_option import FileOption
 from skmultiflow.data.file_stream import FileStream
-#from check import HAT
 from PreFinal import HoeffdingAdaptiveTree
 
 
