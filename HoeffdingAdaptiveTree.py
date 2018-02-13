@@ -86,11 +86,11 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         size: int
             Number of splits.
 
-         “””
+         """
 
 
         def __init__(self, split_test, class_observations, size):
-            """SplitNode class constructor."""
+            """SplitNode class constructor"""
             HoeffdingTree.SplitNode.__init__(self, split_test,class_observations,size)
             self.numLeaves = 0
             self.estimationErrorWeight = ADWIN()
@@ -100,13 +100,13 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             self.classifierRandom = random.seed(self.randomSeed)
 
         def numberLeaves(self):
-        """ Calculate number of node’s leaves.
+        """ Calculate number of node’s children leaves.
             Returns
             -------
             num_of_leaves:int
                 Number of node's leaves
 
-          """
+         """
             num_of_leaves = 0
             for child in self._children:
                 if child is not None:
@@ -116,6 +116,15 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def calc_byte_size_including_subtree(self):
+            """Calculate the size of the node including its subtree.
+
+            Returns
+            -------
+            byteSize:int
+                Size of the node and its subtree in bytes.
+
+            """
+
             byteSize = self.__sizeof__()
 
             if self.alternateTree is not None:
@@ -130,6 +139,13 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def number_leaves(self):
+            """ Calculate number of node’s leaves.
+            Returns
+            -------
+            num_of_leaves:int
+                Number of node's leaves
+
+            """
             numleaves = 0
             for child in self._children:
                 if child is not None:
