@@ -169,6 +169,25 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def learnFromInstance(self, X, y, weight, ht, parent, parent_branch):
+            """Update the node with the provided instance and create alternate tree if significant change is detected in class distribution  .
+
+            Parameters
+            ----------
+            X: numpy.ndarray of length equal to the number of features.
+                Instance attributes for updating the node.
+            y: int
+                Instance class.
+            weight: float
+                Instance weight.
+            ht: Hoeffding Adaptive Tree
+                Hoeffding Adaptive Tree to update.
+            parent: HoeffdingTree.SplitNode or None
+                The node's parent.
+            parent_branch: int
+                The parent node's branch
+
+            """
+
             class_prediction = 0
             #k = np.random.poisson(1.0,self.classifierRandom)
             if self.filter_instance_to_leaf(X, parent, parent_branch).node is not None:
