@@ -496,8 +496,6 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         Incrementally trains the model. Train samples (instances) are compossed of X attributes and their
         corresponding targets y.
 
-        Trains the model on samples X and targets y.
-
         Parameters
         ----------
         X: Numpy.ndarray of shape (n_samples, n_features)
