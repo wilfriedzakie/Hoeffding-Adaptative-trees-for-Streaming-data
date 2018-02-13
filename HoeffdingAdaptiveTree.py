@@ -407,7 +407,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
             #Valid (missing)
             def get_class_votes(self, X, ht):
-                
+             
                 """Get class votes for a single instance.
 
                 Parameters
@@ -418,9 +418,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                 Returns
                 -------
                 dict (class_value, weight)
-                
                 """
-
+                
                 dist = {}
                 
                 if (self._mc_correct_weight > self._nb_correct_weight):
