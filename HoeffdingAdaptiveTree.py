@@ -29,9 +29,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
     Parameters
     ----------
-
-
-    Implementation based on MOA
+    
+    
     """
 
 
