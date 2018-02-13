@@ -287,6 +287,14 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def killTreeChilds(self, ht):
+        """Remove from tree node's children
+
+            Parameters
+            ----------
+            ht: Hoeffding Adaptive Tree
+                Hoeffding Adaptive Tree to remove childre.
+        
+        """
             for child in self._children:
                 if child is not None:
 
@@ -309,7 +317,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             Parameters
             ----------
             X: Data instances.
-            parent: HoeffdingTree.Node
+            myparent: HoeffdingTree.Node
                 Parent node.
             parent_branch: Int
                 Parent branch index
@@ -334,10 +342,28 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
             
     def _new_learning_node(self, initial_class_observations=None):
+         """Create a new instnce of the AdaLearningNode class 
+         
+            Parameters
+            ----------
+            initial_class_observations: ADWIN
+                       
+        
+        """
         return self.AdaLearningNode(initial_class_observations)
 
 
     def new_split_node(self, split_test, class_observations, size):
+        
+        """Create a new instance of the AdaSplitNode class 
+         
+            Parameters
+            ----------
+            initial_class_observations: ADWIN
+                       
+        
+        """
+        
             return self.AdaSplitNode(split_test, class_observations, size)
 
 
