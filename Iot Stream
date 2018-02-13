@@ -7,25 +7,8 @@ from abc import ABCMeta,abstractmethod
 class HoeffdingAdaptiveTree(HoeffdingTree):
 
 
-    def __init__(self, max_byte_size=33554432, memory_estimate_period=1000000, grace_period=200,
-                 split_criterion='info_gain', split_confidence=0.0000001, tie_threshold=0.05, binary_split=False,
-                 stop_mem_management=False, remove_poor_atts=False, no_preprune=False, leaf_prediction='mc',
-                 nb_threshold=0, nominal_attributes=None):
-        """HoeffdingTree class constructor."""
-        super().__init__()
-        self._tree_root = None
-
-        self._active_leaf_node_cnt = 0
-        self._inactive_leaf_node_cnt = 0
-
-        self.updateSplitterCounts = 0.0
-        self.byte_size = 0
-        self._estimationErrorWeight:ADWIN
-
-
-
     class NewNode(metaclass= ABCMeta):
-
+        """ Abstract Class whose methods are overridden by other subclasses methods """
         @abstractmethod
         def numberLeaves(self):
             pass
@@ -47,13 +30,13 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             pass
 
         @abstractmethod
-        def learnFromInstance(self, X,y, ht,parent:HoeffdingTree.SplitNode, parentBranch:int):
+        def learnFromInstance(self, X,y, weight, ht,parent, parentBranch):
             pass
 
         @abstractmethod
-        def filterInstanceToLeaves(self,X,y, myparent:HoeffdingTree.SplitNode,
-                                   parentBranch:int, foundNodes, updateSplitterCounts:bool):
+        def filterInstanceToLeaves(self, X, myparent, parentBranch,updateSplitterCounts,foundNodes):
             pass
+
 
 
 
