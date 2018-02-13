@@ -1,3 +1,3 @@
 # Hoeffding-Adaptative-trees-for-Streaming-data
 
-##To check
+## Developed by Wilfried ZAKIE & Wafa Djerad 
