@@ -31,9 +31,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
     Parameters
     ----------
     
-    
     """
-
 
     class NewNode(metaclass= ABCMeta):
         """ Abstract Class whose methods are overridden by other subclasses methods """
@@ -117,7 +115,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         
         def calc_byte_size_including_subtree(self):
             """Calculate the size of the node including its subtree.
-
+            
             Returns
             -------
             byteSize:int
