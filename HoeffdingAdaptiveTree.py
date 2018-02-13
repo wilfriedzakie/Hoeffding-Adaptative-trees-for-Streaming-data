@@ -13,10 +13,13 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
     """ Hoeffding AdaptiveTree 
 
-    A Hoeffding Adaptive tree is a decision tree-like algorithm which extends Hoeffding tree algorithm. It's used for learning incrementally from data streams. 
+    A Hoeffding Adaptive tree is a decision tree-like algorithm which extends Hoeffding tree algorithm. 
+    It's used for learning incrementally from data streams. 
     It grows tree as is done by the the Hoeffding Tree Algorithm and has also as mathematical guarantee the Hoeffding bound. 
 
-    It builds alternate trees whenever a some changes in the distribution is noticed by ADWIN. Unlike other adaptives window tree Algorithms, such as Hoeffding tree window, it does not need a fixed size of window before to raise an alarm and statistics are store in nodes which decides the number of sufficient examples it needs to split.  The alternate tree can promoted if the tree decrease in accuracy compared to the alternate one.
+    It builds alternate trees whenever a some changes in the distribution is noticed by ADWIN. 
+    Unlike other adaptives window tree Algorithms, such as Hoeffding tree window, it does not need a fixed size of window before to raise an alarm and statistics are store in nodes which decides the number of sufficient examples it needs to split.  
+    The alternate tree can promoted if the tree decrease in accuracy compared to the alternate one.
 
         See for details:
         https://link.springer.com/chapter/10.1007r%2F978-3-642-03915-7_22
