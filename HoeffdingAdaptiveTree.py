@@ -36,7 +36,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
 
     class NewNode(metaclass= ABCMeta):
-
+        """ Abstract Class whose methods are overridden by other subclasses methods """
         @abstractmethod
         def numberLeaves(self):
             pass
@@ -75,6 +75,19 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         self.alternateTree=0
 
     class AdaSplitNode(HoeffdingTree.SplitNode,NewNode):
+        """ 
+        Class for a node that split the data in a hoeffding Adaptive tree
+        Parameters
+        ----------
+        split_test: InstanceConditionalTest
+            used Instantiate Hoeffding Tree SplitNode class 
+        class_observations: dict (class_value, weight) or None
+            Class observations
+        size: int
+            Number of splits.
+
+         “””
+
 
         def __init__(self, split_test, class_observations, size):
             """SplitNode class constructor."""
@@ -87,6 +100,13 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             self.classifierRandom = random.seed(self.randomSeed)
 
         def numberLeaves(self):
+        """ Calculate number of node’s leaves.
+            Returns
+            -------
+            num_of_leaves:int
+                Number of node's leaves
+
+          """
             num_of_leaves = 0
             for child in self._children:
                 if child is not None:
@@ -94,7 +114,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
             return num_of_leaves
 
-        ##Valid
+        
         def calc_byte_size_including_subtree(self):
             byteSize = self.__sizeof__()
 
