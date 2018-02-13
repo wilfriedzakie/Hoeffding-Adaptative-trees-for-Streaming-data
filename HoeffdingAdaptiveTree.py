@@ -541,6 +541,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
     def predict(self, X):
         """Predicts the label of the X instance(s)
+         Parameters
+        ----------
         
         r, _ = get_dimensions(X)
         predictions = []
