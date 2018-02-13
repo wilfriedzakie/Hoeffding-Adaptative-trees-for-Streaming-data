@@ -152,7 +152,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             return numleaves
 
         def getErrorEstimation(self):
-            """ Get the ADWIN class distribution error estimation
+            """ Get the skmultiflow ADWIN class distribution error estimation
             Returns
             -------
             num_of_leaves:int
@@ -164,6 +164,14 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
            
         def getErrorWidth(self):
+        """ 
+        Get the skmultiflow ADWIN class distribution error width
+        Returns
+            -------
+                w:float
+                    error width
+
+         """
             w = 0.0
             if self.isNullError() is False:
                 w = self.estimationErrorWeight._width
@@ -171,6 +179,12 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def isNullError(self):
+        """ 
+        Verify  skmultiflow ADWIN class distribution contains error 
+        Returns
+            -------
+                self.estimationErrorWeight:boolean                         
+         """
             return self.estimationErrorWeight is None
 
 
