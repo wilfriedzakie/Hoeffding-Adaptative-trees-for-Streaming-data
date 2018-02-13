@@ -540,6 +540,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
 
     def predict(self, X):
+        """Predicts the label of the X instance(s)
+        
         r, _ = get_dimensions(X)
         predictions = []
         for i in range(r):
