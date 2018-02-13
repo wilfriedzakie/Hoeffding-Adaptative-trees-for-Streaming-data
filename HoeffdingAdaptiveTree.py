@@ -487,7 +487,6 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             return {}
 
 
-#-----------------------------------------------------------------------------# #
 
     def partial_fit(self, X, y, classes=None, weight=None):
         
