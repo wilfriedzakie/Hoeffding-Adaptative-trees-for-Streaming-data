@@ -275,9 +275,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                 Parent node.
             parent_branch: Int
                 Parent branch index
-            updateSplitterCounts:
-
-            foundNodes:
+            updateSplitterCounts: Boolean
+            FoundNode: List
 
             Returns
             -------
