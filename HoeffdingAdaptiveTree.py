@@ -71,6 +71,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         self._pruned_alternate_trees = 0
         self._switch_alternate_trees = 0
         self.alternateTree=0
+        
 
     class AdaSplitNode(HoeffdingTree.SplitNode,NewNode):
         """ 
@@ -153,20 +154,20 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         def getErrorEstimation(self):
             return self.estimationErrorWeight._estimation
 
-            # valid
+           
         def getErrorWidth(self):
             w = 0.0
             if self.isNullError() is False:
                 w = self.estimationErrorWeight._width
             return w
 
-        # valid
+        
         def isNullError(self):
             return self.estimationErrorWeight is None
 
 
 
-        ##checked Partially and to do
+        
         def learnFromInstance(self, X, y, weight, ht, parent, parent_branch):
             class_prediction = 0
             #k = np.random.poisson(1.0,self.classifierRandom)
@@ -191,7 +192,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
             self.estimationErrorWeight.add_element(0.0 if bl_correct == True else 1.0)
             self.error_change =self.estimationErrorWeight.detected_change()
-            ##to check self_error
+            
 
             if self.error_change == True and old_error > self.get_error_estimation():
                 self.error_change = False
@@ -200,7 +201,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                 self.alternateTree = ht.new_learning_node()
                 ht.alternateTrees += 1
 
-            ##To check
+            
             elif self.alternateTree is not None and self.alternateTree.is_null_error() == False:
                 if self.get_error_width() > 300 and self.alternateTree.get_error_width() > 300:
                     old_error_rate = self.get_error_estimation()
@@ -243,14 +244,10 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             if child is not None:
                 child.learnFromInstance(X, y, weight, ht, parent, parent_branch) #tricky
 
-        #valid
+        
         def killTreeChilds(self, ht):
             for child in self._children:
                 if child is not None:
-
-                   # if isinstance(child, HoeffdingAdaptiveTree.AdaSplitNode) and child.alternateTree is not None:
-                    #    child.alternateTree.killTreeChilds(ht)
-                     #   ht.prunedAlternateTrees+=1
 
                     if isinstance(child, HoeffdingAdaptiveTree.AdaSplitNode):
                         child.killTreeChilds(ht)
@@ -263,8 +260,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                     elif isinstance(child, HoeffdingTree.InactiveLearningNode):
                         child = None
                         ht._inactive_leaf_node_cnt -= 1
+                        
 
-        #validated ##Check if mistake with observed class distribution
         def filterInstanceToLeaves(self, X, myparent, parentBranch,updateSplitterCounts,foundNodes=None):
             """Travers down the tree to locate the corresponding leaf for an instance.
 
@@ -282,7 +279,6 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             -------
             FoundNode
                 The corresponding leaf.
-
             """
            if foundNodes is None:
                foundNodes = []
@@ -302,20 +298,18 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
 
             # Override HoeffdingTree
-
+            
     def _new_learning_node(self, initial_class_observations=None):
         return self.AdaLearningNode(initial_class_observations)
 
-        ##Valid (missing)
+
     def new_split_node(self, split_test, class_observations, size):
             return self.AdaSplitNode(split_test, class_observations, size)
 
 
-    #-------------------------------------------------------------------------#
-
     class AdaLearningNode(HoeffdingTree.LearningNodeNBAdaptive, NewNode):
 
-            #Valid
+            
             def __init__(self, initialClassObservations):
                 HoeffdingTree.LearningNodeNBAdaptive.__init__(self, initialClassObservations)
                 self.estimationErrorWeight= ADWIN()
