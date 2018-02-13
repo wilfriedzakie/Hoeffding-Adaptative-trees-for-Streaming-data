@@ -550,7 +550,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         list
             Predicted labels for all instances in X.
 
-
+        """
 
         
         r, _ = get_dimensions(X)
