@@ -368,6 +368,16 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
 
     class AdaLearningNode(HoeffdingTree.LearningNodeNBAdaptive, NewNode):
+        """ 
+        Class for a node that split the data in a hoeffding Adaptive tree
+        Parameters
+        ----------
+        split_test: InstanceConditionalTest
+            used Instantiate Hoeffding Tree SplitNode class 
+        initialClassObservations: dict (class_value, weight) or None
+                    initial Class observations
+  
+         """
 
             
             def __init__(self, initialClassObservations):
