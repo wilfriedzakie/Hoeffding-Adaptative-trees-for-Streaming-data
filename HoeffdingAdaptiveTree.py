@@ -275,10 +275,6 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             updateSplitterCounts: Boolean
             FoundNode: List
 
-            Returns
-            -------
-            FoundNode
-                The corresponding leaf.
             """
            if foundNodes is None:
                foundNodes = []
