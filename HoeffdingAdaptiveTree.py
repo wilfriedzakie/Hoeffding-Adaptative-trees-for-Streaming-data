@@ -547,6 +547,9 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             Samples for which we want to predict the labels.
         Returns
         -------
+        list
+            Predicted labels for all instances in X.
+
 
 
         
