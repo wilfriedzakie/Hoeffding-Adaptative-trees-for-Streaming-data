@@ -268,10 +268,25 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         #validated ##Check if mistake with observed class distribution
         def filterInstanceToLeaves(self, X, myparent, parentBranch,updateSplitterCounts,foundNodes=None):
+            """Travers down the tree to locate the corresponding leaf for an instance.
 
-            #if updateSplitterCounts:#Maybe
-            #    self._observed_class_distribution[y] = 0.0
-           #     self._observed_class_distribution[y] += weight
+            Parameters
+            ----------
+            X: Data instances.
+            parent: HoeffdingTree.Node
+                Parent node.
+            parent_branch: Int
+                Parent branch index
+            updateSplitterCounts:
+
+            foundNodes:
+
+            Returns
+            -------
+            FoundNode
+                The corresponding leaf.
+
+            """
            if foundNodes is None:
                foundNodes = []
            child_index = self.instance_child_index(X)
@@ -394,17 +409,22 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
             #Valid (missing)
             def get_class_votes(self, X, ht):
+                
+                """Get class votes for a single instance.
 
-                #prediction_option = ht.leafpredictionOption
+                Parameters
+                ----------
+                X: numpy.ndarray of length equal to the number of features.
+                Instance attributes.
+
+                Returns
+                -------
+                dict (class_value, weight)
+                
+                """
+
                 dist = {}
-                #if prediction_option is None:
-                 #   dist = self._observed_class_distribution.getArrayCopy()
-
-                #elif prediction_option == 1:
-
-                 #   dist = NaiveBayes.doNaiveBayesPrediction(X, self.observedClassDistribution, self.attributeObservers)
-
-                #else:
+                
                 if (self._mc_correct_weight > self._nb_correct_weight):
                         dist = self.get_observed_class_distribution()
                 else:
@@ -427,7 +447,6 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                     foundNodes=[]
                 foundNodes.append(HoeffdingTree.FoundNode(self, parent, parent_branch))
 
-            # Checked notimp
 
             ##Checked notimp
             def new_split_node(split_test, class_observations):
@@ -474,6 +493,30 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 #-----------------------------------------------------------------------------# #
 
     def partial_fit(self, X, y, classes=None, weight=None):
+        
+        """ partial_fit
+
+        Trains the model on samples X and targets y.
+
+        Parameters
+        ----------
+        X: Numpy.ndarray of shape (n_samples, n_features)
+            Data instances.
+
+        y: Array-like
+            Contains the classification targets for all samples in X.
+
+        classes: Not used.
+
+        weight: Float or Array-like
+            Instance weight. If not provided, uniform weights are assumed.
+
+        Returns
+        -------
+        self
+
+        """
+
         if y is not None:
             if weight is None:
                 weight = np.array([1.0])
