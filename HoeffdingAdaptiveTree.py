@@ -152,6 +152,14 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             return numleaves
 
         def getErrorEstimation(self):
+            """ Get the ADWIN class distribution error estimation
+            Returns
+            -------
+            num_of_leaves:int
+                Number of node's leaves
+
+            """
+            
             return self.estimationErrorWeight._estimation
 
            
