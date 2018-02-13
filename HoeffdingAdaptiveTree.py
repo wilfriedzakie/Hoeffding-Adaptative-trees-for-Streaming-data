@@ -310,9 +310,6 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
            if self.alteranteTree is not None:
                  self.alternateTree.filterInstanceToLeaves(X, self,  -999, updateSplitterCounts,foundNodes)
 
-
-
-            # Override HoeffdingTree
             
     def _new_learning_node(self, initial_class_observations=None):
         return self.AdaLearningNode(initial_class_observations)
@@ -448,20 +445,31 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             ##Valid
             def filterInstanceToLeaves(self, X, parent, parent_branch,
                                         updateSplitterCounts,foundNodes=None):
+            """Travers down the tree to locate the corresponding leaf for an instance.
+
+            Parameters
+            ----------
+            X: Data instances.
+            parent: HoeffdingTree.Node
+                Parent node.
+            parent_branch: Int
+                Parent branch index
+            updateSplitterCounts: Boolean
+            FoundNode: List
+
+            """
                 if foundNodes is None:
                     foundNodes=[]
                 foundNodes.append(HoeffdingTree.FoundNode(self, parent, parent_branch))
 
-
-            ##Checked notimp
             def new_split_node(split_test, class_observations):
                 return HoeffdingAdaptiveTree.AdaSplitNode(split_test, class_observations)
 
-            # Checked notimp
+            
     def _new_learning_node(self, initial_class_observations=None):
         return self.AdaLearningNode(initial_class_observations)
 
-            ##Checked notimp
+           
     def trainOnInstanceImpl(self, X):
             if self.treeRoot is None:
                     self.treeRoot = self._new_learning_node()
@@ -470,6 +478,22 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
 
     def filterInstanceToLeaves(self, X, split_parent, parent_branch, update_splitter_counts):
+        """Travers down the tree to locate the corresponding leaf for an instance.
+
+            Parameters
+            ----------
+            X: Data instances.
+            parent: HoeffdingTree.Node
+                Parent node.
+            parent_branch: Int
+                Parent branch index
+            updateSplitterCounts: Boolean
+            nodes: List
+            
+            Returns
+            ----------
+            nodes: List
+            """
         nodes = []
         self.treeRoot.filterInstanceToLeaves(X, split_parent, parent_branch, update_splitter_counts, nodes)
         return nodes
