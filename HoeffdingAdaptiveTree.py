@@ -543,6 +543,9 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         """Predicts the label of the X instance(s)
          Parameters
         ----------
+        X: numpy.ndarray of shape (n_samples, n_features)
+            Samples for which we want to predict the labels.
+
         
         r, _ = get_dimensions(X)
         predictions = []
