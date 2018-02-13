@@ -192,9 +192,9 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             for child in self._children:
                 if child is not None:
 
-                    if isinstance(child, HoeffdingAdaptiveTree.AdaSplitNode) and child.alternateTree is not None:
-                        child.alternateTree.killTreeChilds(ht)
-                        ht.prunedAlternateTrees+=1
+                   # if isinstance(child, HoeffdingAdaptiveTree.AdaSplitNode) and child.alternateTree is not None:
+                    #    child.alternateTree.killTreeChilds(ht)
+                     #   ht.prunedAlternateTrees+=1
 
                     if isinstance(child, HoeffdingAdaptiveTree.AdaSplitNode):
                         child.killTreeChilds(ht)
@@ -229,9 +229,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                     foundNodes.append(HoeffdingTree.FoundNode(None, self, child_index))
 
            if self.alteranteTree is not None:
-                return self.alternateTree.filterInstanceToLeaves(X, self,  -999, updateSplitterCounts,foundNodes)
+                 self.alternateTree.filterInstanceToLeaves(X, self,  -999, updateSplitterCounts,foundNodes)
 
-        ##Valid (missing)
 
 
             # Override HoeffdingTree
@@ -253,7 +252,6 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                 HoeffdingTree.LearningNodeNBAdaptive.__init__(self, initialClassObservations)
                 self.estimationErrorWeight= ADWIN()
                 self.ErrorChange = False
-                #self.alternateTree=HoeffdingTree.Node()
                 self.randomSeed = 1
                 self.classifierRandom = random.seed(self.randomSeed)
 
@@ -396,6 +394,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         self.treeRoot.filterInstanceToLeaves(X, split_parent, parent_branch, update_splitter_counts, nodes)
         return nodes
 
+
+
     #Valid
     def get_votes_for_instance(self, X):
         if self.treeRoot is not None:
@@ -438,10 +438,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         self.treeRoot.learnFromInstance(X, y, weight, self, None, -1)
 
 
-    def filter_instance_to_leaves(self, X, split_parent, parent_branch, update_splitter_counts):
-        nodes = []
-        self._tree_root.filter_instance_to_leaves(X, split_parent, parent_branch, update_splitter_counts, nodes)
-        return nodes
+
 
     def predict(self, X):
         r, _ = get_dimensions(X)
