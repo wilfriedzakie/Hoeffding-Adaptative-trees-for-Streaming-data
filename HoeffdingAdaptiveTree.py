@@ -22,14 +22,13 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
     Statistics are store in nodes which decide themselves the number of sufficient examples they needs to split.  
     The alternate tree can promoted if the tree decrease in accuracy compared to the alternate one.
 
-        See for details:
-        https://link.springer.com/chapter/10.1007r%2F978-3-642-03915-7_22
+    See for details:
+    https://link.springer.com/chapter/10.1007r%2F978-3-642-03915-7_22
 
-        Implementation based on:
-        MOA: Massive Online Analysis; Journal of Machine Learning Research 11: 1601-1604
+    Implementation based on:
+    MOA: Massive Online Analysis; Journal of Machine Learning Research 11: 1601-1604
 
-    Parameters
-    ----------
+
     
     """
 
@@ -78,12 +77,12 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         Class for a node that split the data in a hoeffding Adaptive tree
         Parameters
         ----------
-        split_test: InstanceConditionalTest
-            used Instantiate Hoeffding Tree SplitNode class 
-        class_observations: dict (class_value, weight) or None
-            Class observations
-        size: int
-            Number of splits.
+        :param split_test: used Instantiate Hoeffding Tree SplitNode class 
+		:type split_test:InstanceConditionalTest.
+        :param class_observations: Class observations
+        :type class_observations: dict (class_value, weight) or None.    
+        :param size: Number of splits
+        :type  size: int. 
 
          """
 
@@ -99,13 +98,14 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             self.classifierRandom = random.seed(self.randomSeed)
 
         def numberLeaves(self):
-        """ Calculate number of node’s children leaves.
+            """Calculate number of node’s children leaves
             Returns
             -------
             num_of_leaves:int
                 Number of node's leaves
 
-         """
+
+            """
             num_of_leaves = 0
             for child in self._children:
                 if child is not None:
@@ -115,12 +115,12 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def calc_byte_size_including_subtree(self):
-            """Calculate the size of the node including its subtree.
+            """Calculate the size of the node including its subtree
             
             Returns
             -------
             byteSize:int
-                Size of the node and its subtree in bytes.
+                Size of the node and its subtree in bytes
 
             """
 
@@ -138,7 +138,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def number_leaves(self):
-            """ Calculate number of node’s leaves.
+            """Calculate number of node’s leaves
             Returns
             -------
             num_of_leaves:int
@@ -152,7 +152,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             return numleaves
 
         def getErrorEstimation(self):
-            """ Get the skmultiflow ADWIN class distribution error estimation
+            """
+			Get the skmultiflow ADWIN class distribution error estimation
             Returns
             -------
             num_of_leaves:int
@@ -171,7 +172,7 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             w:float
                 error width
 
-         """
+			"""
             w = 0.0
             if self.isNullError() is False:
                 w = self.estimationErrorWeight._width
@@ -191,7 +192,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def learnFromInstance(self, X, y, weight, ht, parent, parent_branch):
-            """Update the node with the provided instance and create alternate tree if significant change is detected in class distribution  .
+            """
+			Update the node with the provided instance and create alternate tree if significant change is detected in class distribution  .
 
             Parameters
             ----------
@@ -287,7 +289,8 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
         
         def killTreeChilds(self, ht):
-            """Remove from tree node's children
+            """
+			Remove from tree node's children
 
             Parameters
             ----------
@@ -314,22 +317,28 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
         def filterInstanceToLeaves(self, X, myparent, parentBranch,updateSplitterCounts,foundNodes=None):
             """Travers down the tree to locate the corresponding leaf for an instance.
 
-            Parameters
-            ----------
-            X: Data instances.
-            myparent: HoeffdingTree.Node
-                Parent node.
-            parent_branch: Int
-                Parent branch index
-            updateSplitterCounts: Boolean
-            FoundNode: List
+             Parameters
+             ----------
+             X: Data instances.
+                    myparent:
+                            Parent node.
+                        parent_branch: Int
+                            Parent branch index
+                        updateSplitterCounts: Boolean
+                        FoundNode: List
 
+            :param X:
+            :param myparent: HoeffdingTree.Node
+            :param parentBranch:
+            :param updateSplitterCounts:
+            :param foundNodes:
             """
-           if foundNodes is None:
-               foundNodes = []
-           child_index = self.instance_child_index(X)
 
-           if child_index >= 0:
+            if foundNodes is None:
+               foundNodes = []
+            child_index = self.instance_child_index(X)
+
+            if child_index >= 0:
                 child = self.get_child(child_index)
 
                 if child is not None:
@@ -337,46 +346,46 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
                 else:
                     foundNodes.append(HoeffdingTree.FoundNode(None, self, child_index))
 
-           if self.alteranteTree is not None:
+            if self.alteranteTree is not None:
                  self.alternateTree.filterInstanceToLeaves(X, self,  -999, updateSplitterCounts,foundNodes)
 
             
     def _new_learning_node(self, initial_class_observations=None):
-         """Create a new instnce of the AdaLearningNode class 
-         
-            Parameters
-            ----------
-            initial_class_observations: ADWIN
-                       
-        
+        """Create a new instnce of the AdaLearningNode class
+
+                  Parameters
+                  ----------
+                  initial_class_observations: ADWIN
+
+
         """
         return self.AdaLearningNode(initial_class_observations)
 
 
     def new_split_node(self, split_test, class_observations, size):
-        
-        """Create a new instance of the AdaSplitNode class 
-         
-            Parameters
-            ----------
-            initial_class_observations: ADWIN
-                       
-        
+
+        """Create a new instance of the AdaSplitNode class
+
+                Parameters
+                ----------
+        			initial_class_observations: ADWIN
+
+
         """
-        
-            return self.AdaSplitNode(split_test, class_observations, size)
+
+        return self.AdaSplitNode(split_test, class_observations, size)
 
 
     class AdaLearningNode(HoeffdingTree.LearningNodeNBAdaptive, NewNode):
-        """ class for Learning Nodes in a Hoeffding Adaptive Tree.
 
-        Parameters
-        ----------
-        initial_class_observations: dict (class_value, weight) or None
-            Initial class observations
+            """ class for Learning Nodes in a Hoeffding Adaptive Tree.
 
-         """
+                Parameters
+                ----------
+                initial_class_observations: dict (class_value, weight) or None
+                    Initial class observations
 
+            """
             
             def __init__(self, initialClassObservations):
                 HoeffdingTree.LearningNodeNBAdaptive.__init__(self, initialClassObservations)
@@ -650,26 +659,26 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
 
 
     def _partial_fit(self, X, y, weight):
-         """ _partial_fit
-        Incrementally trains the model. Train samples (instances) are compossed of X attributes, their
-        corresponding targets y and their weight.
+        """ _partial_fit
+                Incrementally trains the model. Train samples (instances) are compossed of X attributes, their
+                corresponding targets y and their weight.
 
-        Parameters
-        ----------
-        X: Numpy.ndarray of shape (n_samples, n_features)
-            Data instances.
+                Parameters
+                ----------
+                X: Numpy.ndarray of shape (n_samples, n_features)
+                    Data instances.
 
-        y: Array-like
-            Contains the classification targets for all samples in X.
+                y: Array-like
+                    Contains the classification targets for all samples in X.
 
-        classes: Not used.
+                classes: Not used.
 
-        weight: Float or Array-like
-            Instance weight. If not provided, uniform weights are assumed.
+                weight: Float or Array-like
+                    Instance weight. If not provided, uniform weights are assumed.
 
-        Returns
-        -------
-        self
+                Returns
+                -------
+                self
 
         """
 
@@ -722,4 +731,3 @@ class HoeffdingAdaptiveTree(HoeffdingTree):
             return result
         else:
             return {}
-
