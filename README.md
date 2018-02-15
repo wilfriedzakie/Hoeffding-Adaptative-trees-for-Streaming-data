@@ -6,8 +6,8 @@
 ## Table of contents
 * [Overview](#Overview)
 * [Project page](https://wilfriedzakie.github.io/Hoeffding-Adaptative-trees-for-Streaming-data/#)
-    ** [Documentation](https://wilfriedzakie.github.io/Hoeffding-Adaptative-trees-for-Streaming-data/Documentation.html)
-    ** [Installation and Testing](https://wilfriedzakie.github.io/Hoeffding-Adaptative-trees-for-Streaming-data/Installation.html)
+    + [Documentation](https://wilfriedzakie.github.io/Hoeffding-Adaptative-trees-for-Streaming-data/Documentation.html)
+    + [Installation and Testing](https://wilfriedzakie.github.io/Hoeffding-Adaptative-trees-for-Streaming-data/Installation.html)
 
 ## Overview
 
