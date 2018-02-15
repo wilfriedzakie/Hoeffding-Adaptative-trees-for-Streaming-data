@@ -1,4 +1,4 @@
-# Hoeffding-Adaptative-trees-for-Streaming-data
+# Hoeffding Adaptative Tree for streaming data
 
 #### Developed by Wilfried ZAKIE & Wafa Djerad 
 
