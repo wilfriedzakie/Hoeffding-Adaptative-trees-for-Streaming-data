@@ -16,6 +16,9 @@ Documentation:
 
 
 Installation: This algorithm needs [scikit Multiflow](https://scikit-multiflow.github.io/) a stream data framework inspired by MOA and Weka
+
+
+
 ![Scikit Logo](https://scikit-multiflow.github.io/scikit-multiflow/_images/skmultiflow-logo-wide.png)
 
 
