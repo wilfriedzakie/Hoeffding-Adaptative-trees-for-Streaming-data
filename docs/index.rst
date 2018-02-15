@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Hoeffding Adaptive Tree roject's documentation!
+Hoeffding Adaptive Tree project's documentation!
 ===================================================
 
 A Hoeffding Adaptive tree is a decision tree-like algorithm which extends Hoeffding tree algorithm. 
@@ -23,11 +23,13 @@ under the supervision of Professor Albert Bifet and Jacob Montiel.
    :maxdepth: 3
    :caption: Contents:
 
-   Installation
    Documentation
+   Installation
+   
    
 
 Indices and tables
 ==================
-* :ref:`Installation`
 * :ref:`Documentation`
+* :ref:`Installation`
+
