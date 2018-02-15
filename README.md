@@ -23,7 +23,7 @@ See for details: [https://link.springer.com/chapter/10.1007/978-3-642-03915-7_22
 
 
 
-####Installation:#### This algorithm needs [scikit Multiflow](https://scikit-multiflow.github.io/) a stream data framework inspired by MOA and Weka
+Installation: This algorithm needs [scikit Multiflow](https://scikit-multiflow.github.io/) a stream data framework inspired by MOA and Weka
 
 
 
@@ -31,4 +31,4 @@ See for details: [https://link.springer.com/chapter/10.1007/978-3-642-03915-7_22
 
 
 
-####Implementation based on:#### MOA: Massive Online Analysis; Journal of Machine Learning Research 11: 1601-1604
+Implementation based on: MOA: Massive Online Analysis; Journal of Machine Learning Research 11: 1601-1604
