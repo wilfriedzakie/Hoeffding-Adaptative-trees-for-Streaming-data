@@ -1,0 +1,958 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>HoeffdingAdaptiveTree &mdash; Hoeffding Adaptive Tree 02/2018 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Hoeffding Adaptive Tree 02/2018 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Hoeffding Adaptive Tree
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation and Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Documentation.html">Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Hoeffding Adaptive Tree</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>HoeffdingAdaptiveTree</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for HoeffdingAdaptiveTree</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">skmultiflow.classification.trees.hoeffding_tree</span> <span class="k">import</span> <span class="n">HoeffdingTree</span>
+<span class="kn">from</span> <span class="nn">skmultiflow.classification.naive_bayes</span> <span class="k">import</span> <span class="n">NaiveBayes</span>
+<span class="kn">from</span> <span class="nn">skmultiflow.classification.core.driftdetection.adwin</span> <span class="k">import</span> <span class="n">ADWIN</span>
+<span class="kn">from</span> <span class="nn">skmultiflow.classification.core.utils.utils</span> <span class="k">import</span> <span class="n">do_naive_bayes_prediction</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">skmultiflow.core.utils.utils</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree">[docs]</a><span class="k">class</span> <span class="nc">HoeffdingAdaptiveTree</span><span class="p">(</span><span class="n">HoeffdingTree</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Hoeffding AdaptiveTree </span>
+
+<span class="sd">    A Hoeffding Adaptive tree is a decision tree-like algorithm which extends Hoeffding tree algorithm. </span>
+<span class="sd">    It&#39;s used for learning incrementally from data streams. </span>
+<span class="sd">    It grows tree as is done by the the Hoeffding Tree Algorithm and has also as mathematical guarantee the Hoeffding bound. </span>
+
+<span class="sd">    It builds alternate trees whenever a some changes in the distribution is noticed by ADWIN. </span>
+<span class="sd">    Unlike other adaptives window tree Algorithms, such as Hoeffding tree window, it does not need a fixed size of window before to raise an alarm.</span>
+<span class="sd">    Statistics are store in nodes which decide themselves the number of sufficient examples they needs to split.  </span>
+<span class="sd">    The alternate tree can promoted if the tree decrease in accuracy compared to the alternate one.</span>
+
+<span class="sd">        See for details:</span>
+<span class="sd">        https://link.springer.com/chapter/10.1007r%2F978-3-642-03915-7_22</span>
+
+<span class="sd">        Implementation based on:</span>
+<span class="sd">        MOA: Massive Online Analysis; Journal of Machine Learning Research 11: 1601-1604</span>
+
+
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.NewNode"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.NewNode">[docs]</a>    <span class="k">class</span> <span class="nc">NewNode</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span> <span class="n">ABCMeta</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Abstract Class whose methods are overridden by other subclasses methods &quot;&quot;&quot;</span>
+        <span class="nd">@abstractmethod</span>
+        <span class="k">def</span> <span class="nf">numberLeaves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="nd">@abstractmethod</span>
+        <span class="k">def</span> <span class="nf">getErrorEstimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="nd">@abstractmethod</span>
+        <span class="k">def</span> <span class="nf">getErrorWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="nd">@abstractmethod</span>
+        <span class="k">def</span> <span class="nf">isNullError</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="nd">@abstractmethod</span>
+        <span class="k">def</span> <span class="nf">killTreeChilds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ht</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="nd">@abstractmethod</span>
+        <span class="k">def</span> <span class="nf">learnFromInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span><span class="n">parent</span><span class="p">,</span> <span class="n">parentBranch</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="nd">@abstractmethod</span>
+        <span class="k">def</span> <span class="nf">filterInstanceToLeaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">myparent</span><span class="p">,</span> <span class="n">parentBranch</span><span class="p">,</span><span class="n">updateSplitterCounts</span><span class="p">,</span><span class="n">foundNodes</span><span class="p">):</span>
+            <span class="k">pass</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;HoeffdingTree class constructor.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HoeffdingAdaptiveTree</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treeRoot</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pruned_alternate_trees</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_switch_alternate_trees</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">=</span><span class="mi">0</span>
+        
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode">[docs]</a>    <span class="k">class</span> <span class="nc">AdaSplitNode</span><span class="p">(</span><span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">SplitNode</span><span class="p">,</span><span class="n">NewNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Class for a node that split the data in a hoeffding Adaptive tree</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        :param split_test: used Instantiate Hoeffding Tree SplitNode class </span>
+<span class="sd">		:type split_test:InstanceConditionalTest.</span>
+<span class="sd">        :param class_observations: Class observations</span>
+<span class="sd">        :type class_observations: dict (class_value, weight) or None.    </span>
+<span class="sd">        :param size: Number of splits</span>
+<span class="sd">        :type  size: int. </span>
+
+<span class="sd">         &quot;&quot;&quot;</span>
+
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">split_test</span><span class="p">,</span> <span class="n">class_observations</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;SplitNode class constructor&quot;&quot;&quot;</span>
+            <span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">SplitNode</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">split_test</span><span class="p">,</span><span class="n">class_observations</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">numLeaves</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="o">=</span> <span class="n">ADWIN</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ErrorChange</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">randomSeed</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">classifierRandom</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">randomSeed</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.numberLeaves"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.numberLeaves">[docs]</a>        <span class="k">def</span> <span class="nf">numberLeaves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Calculate number of node’s children leaves</span>
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            :return num_of_leaves:Number of node&#39;s leaves</span>
+<span class="sd">            :type num_of_leaves:int</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">num_of_leaves</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">num_of_leaves</span> <span class="o">+=</span> <span class="n">child</span><span class="o">.</span><span class="n">number_leaves</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">num_of_leaves</span></div>
+
+        
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.calc_byte_size_including_subtree"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.calc_byte_size_including_subtree">[docs]</a>        <span class="k">def</span> <span class="nf">calc_byte_size_including_subtree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Calculate the size of the node including its subtree</span>
+<span class="sd">            </span>
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            byteSize:int</span>
+<span class="sd">                Size of the node and its subtree in bytes</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="n">byteSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sizeof__</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">byteSize</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">calc_byte_size_including_subtree</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">byteSize</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">get_length_estimation</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">byteSize</span> <span class="o">+=</span> <span class="n">child</span><span class="o">.</span><span class="n">calc_byte_size_including_subtree</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">byteSize</span></div>
+
+        
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.number_leaves"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.number_leaves">[docs]</a>        <span class="k">def</span> <span class="nf">number_leaves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">			Calculate number of node’s leaves</span>
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            num_of_leaves:int</span>
+<span class="sd">                Number of node&#39;s leaves</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">numleaves</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">numleaves</span> <span class="o">+=</span> <span class="n">child</span><span class="o">.</span><span class="n">number_leaves</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">numleaves</span></div>
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.getErrorEstimation"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.getErrorEstimation">[docs]</a>        <span class="k">def</span> <span class="nf">getErrorEstimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">			Get the skmultiflow ADWIN class distribution error estimation</span>
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            num_of_leaves:int</span>
+<span class="sd">                Number of node&#39;s leaves</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">_estimation</span></div>
+
+           
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.getErrorWidth"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.getErrorWidth">[docs]</a>        <span class="k">def</span> <span class="nf">getErrorWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">            Get the skmultiflow ADWIN class distribution error width</span>
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            w:float</span>
+<span class="sd">                error width</span>
+
+<span class="sd">			&quot;&quot;&quot;</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isNullError</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">_width</span>
+            <span class="k">return</span> <span class="n">w</span></div>
+
+        
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.isNullError"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.isNullError">[docs]</a>        <span class="k">def</span> <span class="nf">isNullError</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">            Verify  skmultiflow ADWIN class distribution contains error </span>
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            self.estimationErrorWeight:boolean                         </span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="ow">is</span> <span class="kc">None</span></div>
+
+
+
+        
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.learnFromInstance"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.learnFromInstance">[docs]</a>        <span class="k">def</span> <span class="nf">learnFromInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">			Update the node with the provided instance and create alternate tree if significant change is detected in class distribution  .</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            X: numpy.ndarray of length equal to the number of features.</span>
+<span class="sd">                Instance attributes for updating the node.</span>
+<span class="sd">            y: int</span>
+<span class="sd">                Instance class.</span>
+<span class="sd">            weight: float</span>
+<span class="sd">                Instance weight.</span>
+<span class="sd">            ht: Hoeffding Adaptive Tree</span>
+<span class="sd">                Hoeffding Adaptive Tree to update.</span>
+<span class="sd">            parent: HoeffdingTree.SplitNode or None</span>
+<span class="sd">                The node&#39;s parent.</span>
+<span class="sd">            parent_branch: int</span>
+<span class="sd">                The parent node&#39;s branch</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="n">class_prediction</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1">#k = np.random.poisson(1.0,self.classifierRandom)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_instance_to_leaf</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">)</span><span class="o">.</span><span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                 <span class="n">res</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_instance_to_leaf</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">)</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">get_class_votes</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">ht</span><span class="p">)</span>
+
+                 <span class="c1">#Get the majority vote</span>
+                 <span class="nb">max</span><span class="o">=</span><span class="mi">0</span>
+                 <span class="n">maxIdx</span><span class="o">=</span><span class="mi">0</span>
+                 <span class="k">for</span> <span class="n">k</span> <span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                     <span class="k">if</span> <span class="n">v</span><span class="o">&gt;</span><span class="nb">max</span><span class="p">:</span>
+                         <span class="n">maxIdx</span><span class="o">=</span><span class="n">k</span>
+                         <span class="nb">max</span> <span class="o">=</span> <span class="mi">0</span>
+                 <span class="n">class_prediction</span> <span class="o">=</span><span class="n">maxIdx</span>
+
+            <span class="n">bl_correct</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="n">class_prediction</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="o">=</span> <span class="n">ADWIN</span><span class="p">()</span>
+
+            <span class="n">old_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_error_estimation</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">add_element</span><span class="p">(</span><span class="mf">0.0</span> <span class="k">if</span> <span class="n">bl_correct</span> <span class="o">==</span> <span class="kc">True</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_change</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">detected_change</span><span class="p">()</span>
+            
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_change</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">old_error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_error_estimation</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error_change</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_change</span> <span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span> <span class="o">=</span> <span class="n">ht</span><span class="o">.</span><span class="n">new_learning_node</span><span class="p">()</span>
+                <span class="n">ht</span><span class="o">.</span><span class="n">alternateTrees</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">is_null_error</span><span class="p">()</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_error_width</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">300</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">get_error_width</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">300</span><span class="p">:</span>
+                    <span class="n">old_error_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_error_estimation</span><span class="p">()</span>
+                    <span class="n">alt_error_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">get_error_estimation</span><span class="p">()</span>
+                    <span class="n">fDelta</span> <span class="o">=</span> <span class="mf">0.05</span>
+                    <span class="n">fn</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">get_error_width</span><span class="p">())</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_error_width</span><span class="p">())</span>
+
+                    <span class="n">bound</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">old_error_rate</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">old_error_rate</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="n">fDelta</span><span class="p">)</span><span class="o">*</span><span class="n">fn</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">bound</span> <span class="o">&lt;</span> <span class="n">old_error_rate</span> <span class="o">-</span> <span class="n">alt_error_rate</span><span class="p">:</span>
+                        <span class="n">ht</span><span class="o">.</span><span class="n">_active_leaf_node_cnt</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numberLeaves</span><span class="p">()</span>
+                        <span class="n">ht</span><span class="o">.</span><span class="n">_active_leaf_node_cnt</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">numberLeaves</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">killTreeChilds</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">parent</span><span class="o">.</span><span class="n">setChild</span><span class="p">(</span><span class="n">parent_branch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">ht</span><span class="o">.</span><span class="n">treeRoot</span> <span class="o">=</span> <span class="n">ht</span><span class="o">.</span><span class="n">treeRoot</span><span class="o">.</span><span class="n">alternateTree</span>
+                        <span class="n">ht</span><span class="o">.</span><span class="n">_switchAlternateTrees</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                    <span class="k">elif</span> <span class="n">bound</span> <span class="o">&lt;</span> <span class="n">alt_error_rate</span> <span class="o">-</span> <span class="n">old_error_rate</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="p">,</span> <span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">ActiveLearningNode</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span> <span class="o">=</span> <span class="kc">None</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_active_leaf_node_cnt</span> <span class="o">-=</span> <span class="mi">1</span>
+
+                        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="p">,</span> <span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">InactiveLearningNode</span><span class="p">):</span><span class="c1">#tricky</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span> <span class="o">=</span> <span class="kc">None</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_inactive_leaf_node_cnt</span> <span class="o">-=</span> <span class="mi">1</span>
+
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">killTreeChilds</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span>
+                        <span class="n">ht</span><span class="o">.</span><span class="n">_prunedalternateTree</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">learnFromInstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">)</span>
+
+            <span class="n">child_branch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_child_index</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">child</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_child</span><span class="p">(</span><span class="n">child_branch</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">learnFromInstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">)</span> <span class="c1">#tricky</span></div>
+
+        
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.killTreeChilds"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.killTreeChilds">[docs]</a>        <span class="k">def</span> <span class="nf">killTreeChilds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ht</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">			Remove from tree node&#39;s children</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            ht: Hoeffding Adaptive Tree</span>
+<span class="sd">                Hoeffding Adaptive Tree to remove childre.</span>
+<span class="sd">        </span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">HoeffdingAdaptiveTree</span><span class="o">.</span><span class="n">AdaSplitNode</span><span class="p">):</span>
+                        <span class="n">child</span><span class="o">.</span><span class="n">killTreeChilds</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">HoeffdingAdaptiveTree</span><span class="o">.</span><span class="n">ActiveLearningNode</span><span class="p">):</span>
+                        <span class="n">child</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="n">ht</span><span class="o">.</span><span class="n">_active_leaf_node_cnt</span> <span class="o">-=</span> <span class="mi">1</span>
+
+
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">InactiveLearningNode</span><span class="p">):</span>
+                        <span class="n">child</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="n">ht</span><span class="o">.</span><span class="n">_inactive_leaf_node_cnt</span> <span class="o">-=</span> <span class="mi">1</span></div>
+                        
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaSplitNode.filterInstanceToLeaves"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.filterInstanceToLeaves">[docs]</a>        <span class="k">def</span> <span class="nf">filterInstanceToLeaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">myparent</span><span class="p">,</span> <span class="n">parentBranch</span><span class="p">,</span><span class="n">updateSplitterCounts</span><span class="p">,</span><span class="n">foundNodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Travers down the tree to locate the corresponding leaf for an instance.</span>
+
+<span class="sd">             Parameters</span>
+<span class="sd">             ----------</span>
+<span class="sd">             X: Data instances.</span>
+<span class="sd">                    myparent:</span>
+<span class="sd">                            Parent node.</span>
+<span class="sd">                        parent_branch: Int</span>
+<span class="sd">                            Parent branch index</span>
+<span class="sd">                        updateSplitterCounts: Boolean</span>
+<span class="sd">                        FoundNode: List</span>
+
+<span class="sd">            :param X:</span>
+<span class="sd">            :param myparent: HoeffdingTree.Node</span>
+<span class="sd">            :param parentBranch:</span>
+<span class="sd">            :param updateSplitterCounts:</span>
+<span class="sd">            :param foundNodes:</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="n">foundNodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+               <span class="n">foundNodes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">child_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_child_index</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">child_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">child</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_child</span><span class="p">(</span><span class="n">child_index</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">child</span><span class="o">.</span><span class="n">filterInstanceToLeaves</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">myparent</span><span class="p">,</span><span class="n">parentBranch</span><span class="p">,</span> <span class="n">updateSplitterCounts</span><span class="p">,</span><span class="n">foundNodes</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">foundNodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">FoundNode</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">child_index</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alteranteTree</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">alternateTree</span><span class="o">.</span><span class="n">filterInstanceToLeaves</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span>  <span class="o">-</span><span class="mi">999</span><span class="p">,</span> <span class="n">updateSplitterCounts</span><span class="p">,</span><span class="n">foundNodes</span><span class="p">)</span></div></div>
+
+            
+    <span class="k">def</span> <span class="nf">_new_learning_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_class_observations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new instnce of the AdaLearningNode class</span>
+
+<span class="sd">                  Parameters</span>
+<span class="sd">                  ----------</span>
+<span class="sd">                  initial_class_observations: ADWIN</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">AdaLearningNode</span><span class="p">(</span><span class="n">initial_class_observations</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.new_split_node"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.new_split_node">[docs]</a>    <span class="k">def</span> <span class="nf">new_split_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">split_test</span><span class="p">,</span> <span class="n">class_observations</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Create a new instance of the AdaSplitNode class</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">        			initial_class_observations: ADWIN</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">AdaSplitNode</span><span class="p">(</span><span class="n">split_test</span><span class="p">,</span> <span class="n">class_observations</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode">[docs]</a>    <span class="k">class</span> <span class="nc">AdaLearningNode</span><span class="p">(</span><span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">LearningNodeNBAdaptive</span><span class="p">,</span> <span class="n">NewNode</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot; class for Learning Nodes in a Hoeffding Adaptive Tree.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                initial_class_observations: dict (class_value, weight) or None</span>
+<span class="sd">                    Initial class observations</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initialClassObservations</span><span class="p">):</span>
+                <span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">LearningNodeNBAdaptive</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initialClassObservations</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">=</span> <span class="n">ADWIN</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ErrorChange</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">randomSeed</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">classifierRandom</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">randomSeed</span><span class="p">)</span>
+
+           
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.calcByteSize"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.calcByteSize">[docs]</a>            <span class="k">def</span> <span class="nf">calcByteSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Calculate the size of the node including its subtree.</span>
+<span class="sd">            </span>
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                byteSize:int</span>
+<span class="sd">                    Size of the node and its subtree in bytes.</span>
+
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">byteSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sizeof__</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">byteSize</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">get_length_estimation</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">byteSize</span></div>
+
+         
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.numberLeaves"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.numberLeaves">[docs]</a>            <span class="k">def</span> <span class="nf">numberLeaves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot; Return 1&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="mi">1</span></div>
+
+            
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.getErrorEstimation"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.getErrorEstimation">[docs]</a>            <span class="k">def</span> <span class="nf">getErrorEstimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot; Get the skmultiflow ADWIN class distribution error estimation</span>
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                num_of_leaves:int</span>
+<span class="sd">                    Number of node&#39;s leaves</span>
+
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">_estimation</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span></div>
+
+           
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.getErrorWidth"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.getErrorWidth">[docs]</a>            <span class="k">def</span> <span class="nf">getErrorWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot; Get the skmultiflow ADWIN class distribution error width</span>
+<span class="sd">                    Returns</span>
+<span class="sd">                    -------</span>
+<span class="sd">                    w:float</span>
+<span class="sd">                        error width</span>
+
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">_width</span></div>
+
+           
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.isNullError"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.isNullError">[docs]</a>            <span class="k">def</span> <span class="nf">isNullError</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">                Verify  skmultiflow ADWIN class distribution contains error </span>
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                self.estimationErrorWeight:boolean                         </span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="ow">is</span> <span class="kc">None</span></div>
+
+          
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.killTreeChilds"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.killTreeChilds">[docs]</a>            <span class="k">def</span> <span class="nf">killTreeChilds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ht</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Remove from tree node&#39;s children&quot;&quot;&quot;</span>
+                <span class="k">pass</span></div>
+
+           
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.learnFromInstance"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.learnFromInstance">[docs]</a>            <span class="k">def</span> <span class="nf">learnFromInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parentBranch</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Update the node with the provided instance and create alternate tree if significant change is detected in class distribution  .</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X: numpy.ndarray of length equal to the number of features.</span>
+<span class="sd">                    Instance attributes for updating the node.</span>
+<span class="sd">                y: int</span>
+<span class="sd">                    Instance class.</span>
+<span class="sd">                weight: float</span>
+<span class="sd">                    Instance weight.</span>
+<span class="sd">                ht: Hoeffding Adaptive Tree</span>
+<span class="sd">                    Hoeffding Adaptive Tree to update.</span>
+<span class="sd">                parent: HoeffdingTree.SplitNode or None</span>
+<span class="sd">                    The node&#39;s parent.</span>
+<span class="sd">                parent_branch: int</span>
+<span class="sd">                    The parent node&#39;s branch</span>
+
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">ClassPrediction</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifierRandom</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">k</span>
+
+                <span class="n">vote</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_class_votes</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">ht</span><span class="p">)</span>
+
+                <span class="c1"># Get the majority vote</span>
+                <span class="nb">max</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">maxIdx</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vote</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                     <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">:</span>
+                         <span class="n">maxIdx</span> <span class="o">=</span> <span class="n">k</span>
+                         <span class="nb">max</span><span class="o">=</span><span class="n">v</span>
+                <span class="n">ClassPrediction</span> <span class="o">=</span> <span class="n">maxIdx</span>
+
+
+                <span class="n">blCorrect</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="n">ClassPrediction</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span> <span class="o">=</span> <span class="n">ADWIN</span><span class="p">()</span>
+
+                <span class="n">oldError</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getErrorEstimation</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">add_element</span><span class="p">(</span><span class="mf">0.0</span> <span class="k">if</span> <span class="n">blCorrect</span> <span class="o">==</span> <span class="kc">True</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ErrorChange</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimationErrorWeight</span><span class="o">.</span><span class="n">detected_change</span><span class="p">()</span>
+
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ErrorChange</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">oldError</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">getErrorEstimation</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ErrorChange</span> <span class="o">=</span> <span class="kc">False</span>
+
+                <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">learn_from_instance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">ht</span><span class="p">)</span>
+
+                <span class="n">weight_seen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_weight_seen</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">weight_seen</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_weight_seen_at_last_split_evaluation</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">ht</span><span class="o">.</span><span class="n">grace_period</span><span class="p">:</span>
+                    <span class="n">ht</span><span class="o">.</span><span class="n">_attempt_to_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parentBranch</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_weight_seen_at_last_split_evaluation</span><span class="p">(</span><span class="n">weight_seen</span><span class="p">)</span></div>
+
+           
+            
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.normalize"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.normalize">[docs]</a>            <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">sum</span><span class="p">,</span> <span class="n">dist</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Normalizes all numeric values in the given dataset (apart from the class attribute, if set). </span>
+<span class="sd">                The resulting values are by default in [0,1]</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                dist: Dictionnary</span>
+<span class="sd">                    Instance values</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">if</span> <span class="nb">sum</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="nb">sum</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dist</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> 
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="nb">sum</span></div>
+
+
+            
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.get_class_votes"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.get_class_votes">[docs]</a>            <span class="k">def</span> <span class="nf">get_class_votes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">ht</span><span class="p">):</span>
+             
+                <span class="sd">&quot;&quot;&quot;Get class votes for a single instance.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X: numpy.ndarray of length equal to the number of features.</span>
+<span class="sd">                Instance attributes.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                dict (class_value, weight)</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                
+                <span class="n">dist</span> <span class="o">=</span> <span class="p">{}</span>
+                
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mc_correct_weight</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nb_correct_weight</span><span class="p">):</span>
+                        <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_observed_class_distribution</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dist</span> <span class="o">=</span> <span class="n">do_naive_bayes_prediction</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observed_class_distribution</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_observers</span><span class="p">)</span>
+
+                <span class="n">distSum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                <span class="n">distSum</span><span class="o">=</span><span class="mi">0</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dist</span><span class="p">:</span>
+                    <span class="n">distSum</span><span class="o">+=</span><span class="n">dist</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+                <span class="n">ds</span> <span class="o">=</span> <span class="n">distSum</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">getErrorEstimation</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">getErrorEstimation</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">ds</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">dist</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">dist</span></div>
+
+           
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.AdaLearningNode.filterInstanceToLeaves"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.filterInstanceToLeaves">[docs]</a>            <span class="k">def</span> <span class="nf">filterInstanceToLeaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">,</span>
+                                        <span class="n">updateSplitterCounts</span><span class="p">,</span><span class="n">foundNodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                                        
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Travers down the tree to locate the corresponding leaf for an instance.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X: Data instances.</span>
+<span class="sd">                parent: HoeffdingTree.Node</span>
+<span class="sd">                    Parent node.</span>
+<span class="sd">                parent_branch: Int</span>
+<span class="sd">                    Parent branch index</span>
+<span class="sd">                updateSplitterCounts: Boolean</span>
+<span class="sd">                FoundNode: List</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                
+                <span class="k">if</span> <span class="n">foundNodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">foundNodes</span><span class="o">=</span><span class="p">[]</span>
+                <span class="n">foundNodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">HoeffdingTree</span><span class="o">.</span><span class="n">FoundNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">))</span></div>
+
+            <span class="k">def</span> <span class="nf">new_split_node</span><span class="p">(</span><span class="n">split_test</span><span class="p">,</span> <span class="n">class_observations</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">HoeffdingAdaptiveTree</span><span class="o">.</span><span class="n">AdaSplitNode</span><span class="p">(</span><span class="n">split_test</span><span class="p">,</span> <span class="n">class_observations</span><span class="p">)</span></div>
+
+    <span class="c1">#|---------------------------------------------------------------------------------------------------------------#</span>
+    
+    <span class="k">def</span> <span class="nf">_new_learning_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_class_observations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Learn New Nodes&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">AdaLearningNode</span><span class="p">(</span><span class="n">initial_class_observations</span><span class="p">)</span>
+
+    
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.filterInstanceToLeaves"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.filterInstanceToLeaves">[docs]</a>    <span class="k">def</span> <span class="nf">filterInstanceToLeaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">split_parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">,</span> <span class="n">update_splitter_counts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Travers down the tree to locate the corresponding leaf for an instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            X: Data instances.</span>
+<span class="sd">            parent: HoeffdingTree.Node</span>
+<span class="sd">                Parent node.</span>
+<span class="sd">            parent_branch: Int</span>
+<span class="sd">                Parent branch index</span>
+<span class="sd">            updateSplitterCounts: Boolean</span>
+<span class="sd">            nodes: List</span>
+<span class="sd">            </span>
+<span class="sd">            Returns</span>
+<span class="sd">            ----------</span>
+<span class="sd">            nodes: List</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treeRoot</span><span class="o">.</span><span class="n">filterInstanceToLeaves</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">split_parent</span><span class="p">,</span> <span class="n">parent_branch</span><span class="p">,</span> <span class="n">update_splitter_counts</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span></div>
+
+
+
+    
+    
+
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.partial_fit"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.partial_fit">[docs]</a>    <span class="k">def</span> <span class="nf">partial_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot; partial_fit</span>
+<span class="sd">        Incrementally trains the model. The weight of the instances re computed and passed to _partial_fit</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X: Numpy.ndarray of shape (n_samples, n_features)</span>
+<span class="sd">            Data instances.</span>
+
+<span class="sd">        y: Array-like</span>
+<span class="sd">            Contains the classification targets for all samples in X.</span>
+
+<span class="sd">        classes: Not used.</span>
+
+<span class="sd">        weight: Float or Array-like</span>
+<span class="sd">            Instance weight. If not provided, uniform weights are assumed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">])</span>
+            <span class="n">row_cnt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_dimensions</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">wrow_cnt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_dimensions</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">row_cnt</span> <span class="o">!=</span> <span class="n">wrow_cnt</span><span class="p">:</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="p">[</span><span class="n">weight</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">*</span> <span class="n">row_cnt</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">row_cnt</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_partial_fit</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">weight</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_partial_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; _partial_fit</span>
+<span class="sd">                Incrementally trains the model. Train samples (instances) are compossed of X attributes, their</span>
+<span class="sd">                corresponding targets y and their weight.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X: Numpy.ndarray of shape (n_samples, n_features)</span>
+<span class="sd">                    Data instances.</span>
+
+<span class="sd">                y: Array-like</span>
+<span class="sd">                    Contains the classification targets for all samples in X.</span>
+
+<span class="sd">                classes: Not used.</span>
+
+<span class="sd">                weight: Float or Array-like</span>
+<span class="sd">                    Instance weight. If not provided, uniform weights are assumed.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                self</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">treeRoot</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">treeRoot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_learning_node</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_active_leaf_node_cnt</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treeRoot</span><span class="o">.</span><span class="n">learnFromInstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+
+
+<div class="viewcode-block" id="HoeffdingAdaptiveTree.predict"><a class="viewcode-back" href="../Documentation.html#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Predicts the label of the X instance(s)</span>
+<span class="sd">         Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X: numpy.ndarray of shape (n_samples, n_features)</span>
+<span class="sd">            Samples for which we want to predict the labels.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Predicted labels for all instances in X.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        
+        <span class="n">r</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_dimensions</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">votes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_votes_for_instance</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">votes</span> <span class="o">==</span> <span class="p">{}:</span>
+                <span class="c1"># Tree is empty, all classes equal, default to zero</span>
+                <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">votes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">votes</span><span class="o">.</span><span class="n">get</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">predictions</span></div>
+    
+    <span class="k">def</span> <span class="nf">get_votes_for_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">treeRoot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">found_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filterInstanceToLeaves</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">predictionPaths</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">for</span> <span class="n">found_node</span> <span class="ow">in</span> <span class="n">found_nodes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">found_node</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">999</span><span class="p">:</span>
+                    <span class="n">leaf_node</span> <span class="o">=</span> <span class="n">found_node</span><span class="o">.</span><span class="n">node</span>
+                    <span class="k">if</span> <span class="n">leaf_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">leaf_node</span> <span class="o">=</span> <span class="n">found_node</span><span class="o">.</span><span class="n">parent</span>
+                    <span class="n">dist</span> <span class="o">=</span> <span class="n">leaf_node</span><span class="o">.</span><span class="n">get_class_votes</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, IOT Stream Data Mining, Telecom Paristech.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'02/2018',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
