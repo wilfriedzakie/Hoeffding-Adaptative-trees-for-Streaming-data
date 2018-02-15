@@ -10,7 +10,7 @@ It builds alternate trees whenever a some changes in the distribution is noticed
 Statistics are store in nodes which decide themselves the number of sufficient examples they needs to split.  
 The alternate tree can promoted if the tree decrease in accuracy compared to the alternate one.
 
-See for details: [https://link.springer.com/chapter/10.1007r%2F978-3-642-03915-7_22](https://link.springer.com/chapter/10.1007r%2F978-3-642-03915-7_22)
+See for details: [https://link.springer.com/chapter/10.1007/978-3-642-03915-7_22](https://link.springer.com/chapter/10.1007/978-3-642-03915-7_22)
 
 Documentation:
 Installation:
