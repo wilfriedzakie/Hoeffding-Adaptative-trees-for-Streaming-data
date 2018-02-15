@@ -1,10 +1,8 @@
-# Hoeffding Adaptative Tree for streaming data
+# Hoeffding Adaptative Tree Project's
 
-<<<<<<< HEAD
-#### Developed by Wilfried ZAKIE, Wafa Djerad && Kien DANG Trung
-=======
-#### Developed by Wilfried ZAKIE & Wafa Djerad 
->>>>>>> a5939f9c0f24b1ef398cf8944214be50ac3b1f25
+
+###### Developed by Wilfried ZAKIE, Wafa Djerad && Kien DANG Trung
+
 
    A Hoeffding Adaptive tree is a decision tree-like algorithm which extends Hoeffding tree algorithm. 
 It's used for learning incrementally from data streams. 
@@ -16,6 +14,8 @@ The alternate tree can promoted if the tree decrease in accuracy compared to the
 
 See for details: [https://link.springer.com/chapter/10.1007/978-3-642-03915-7_22](https://link.springer.com/chapter/10.1007/978-3-642-03915-7_22)
 
+
+
 Documentation:
 
 
@@ -24,8 +24,6 @@ Installation: This algorithm needs [scikit Multiflow](https://scikit-multiflow.g
 
 
 ![Scikit Logo](https://scikit-multiflow.github.io/scikit-multiflow/_images/skmultiflow-logo-wide.png)
-
-
 
 
 
