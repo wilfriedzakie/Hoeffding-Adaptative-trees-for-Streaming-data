@@ -1,7 +1,7 @@
 # Hoeffding Adaptative Tree Project's
 
 
-###### Developed by Wilfried ZAKIE, Wafa Djerad && Kien DANG Trung
+###### Developed by Wilfried ZAKIE, Wafa Djerad & Kien DANG Trung
 
 ## Table of contents
 * [Overview](#Overview)
