@@ -1,0 +1,594 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Documentation &mdash; Hoeffding Adaptive Tree 02/2018 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Hoeffding Adaptive Tree 02/2018 documentation" href="index.html"/>
+        <link rel="prev" title="Installation and Testing" href="Installation.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Hoeffding Adaptive Tree
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation and Testing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hoeffding Adaptive Tree</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Documentation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-HoeffdingAdaptiveTree">
+<span id="documentation"></span><h1>Documentation<a class="headerlink" href="#module-HoeffdingAdaptiveTree" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree">
+<em class="property">class </em><code class="descclassname">HoeffdingAdaptiveTree.</code><code class="descname">HoeffdingAdaptiveTree</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwarg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hoeffding AdaptiveTree</p>
+<p>A Hoeffding Adaptive tree is a decision tree-like algorithm which extends Hoeffding tree algorithm. 
+It’s used for learning incrementally from data streams. 
+It grows tree as is done by the the Hoeffding Tree Algorithm and has also as mathematical guarantee the Hoeffding bound.</p>
+<p>It builds alternate trees whenever a some changes in the distribution is noticed by ADWIN. 
+Unlike other adaptives window tree Algorithms, such as Hoeffding tree window, it does not need a fixed size of window before to raise an alarm.
+Statistics are store in nodes which decide themselves the number of sufficient examples they needs to split.  
+The alternate tree can promoted if the tree decrease in accuracy compared to the alternate one.</p>
+<blockquote>
+<div><p>See for details:
+<a class="reference external" href="https://link.springer.com/chapter/10.1007r%2F978-3-642-03915-7_22">https://link.springer.com/chapter/10.1007r%2F978-3-642-03915-7_22</a></p>
+<p>Implementation based on:
+MOA: Massive Online Analysis; Journal of Machine Learning Research 11: 1601-1604</p>
+</div></blockquote>
+<dl class="class">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode">
+<em class="property">class </em><code class="descname">AdaLearningNode</code><span class="sig-paren">(</span><em>initialClassObservations</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>class for Learning Nodes in a Hoeffding Adaptive Tree.</p>
+<dl class="docutils">
+<dt>initial_class_observations: dict (class_value, weight) or None</dt>
+<dd>Initial class observations</dd>
+</dl>
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.calcByteSize">
+<code class="descname">calcByteSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.calcByteSize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.calcByteSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the size of the node including its subtree.</p>
+<dl class="docutils">
+<dt>byteSize:int</dt>
+<dd>Size of the node and its subtree in bytes.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.filterInstanceToLeaves">
+<code class="descname">filterInstanceToLeaves</code><span class="sig-paren">(</span><em>X</em>, <em>parent</em>, <em>parent_branch</em>, <em>updateSplitterCounts</em>, <em>foundNodes=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.filterInstanceToLeaves"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.filterInstanceToLeaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Travers down the tree to locate the corresponding leaf for an instance.</p>
+<p>X: Data instances.
+parent: HoeffdingTree.Node</p>
+<blockquote>
+<div>Parent node.</div></blockquote>
+<dl class="docutils">
+<dt>parent_branch: Int</dt>
+<dd>Parent branch index</dd>
+</dl>
+<p>updateSplitterCounts: Boolean
+FoundNode: List</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.getErrorEstimation">
+<code class="descname">getErrorEstimation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.getErrorEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.getErrorEstimation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the skmultiflow ADWIN class distribution error estimation
+Returns
+——-
+num_of_leaves:int</p>
+<blockquote>
+<div>Number of node’s leaves</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.getErrorWidth">
+<code class="descname">getErrorWidth</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.getErrorWidth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.getErrorWidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the skmultiflow ADWIN class distribution error width
+Returns
+——-
+w:float</p>
+<blockquote>
+<div>error width</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.get_class_votes">
+<code class="descname">get_class_votes</code><span class="sig-paren">(</span><em>X</em>, <em>ht</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.get_class_votes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.get_class_votes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get class votes for a single instance.</p>
+<p>X: numpy.ndarray of length equal to the number of features.
+Instance attributes.</p>
+<p>dict (class_value, weight)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.isNullError">
+<code class="descname">isNullError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.isNullError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.isNullError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify  skmultiflow ADWIN class distribution contains error 
+Returns
+——-
+self.estimationErrorWeight:boolean</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.killTreeChilds">
+<code class="descname">killTreeChilds</code><span class="sig-paren">(</span><em>ht</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.killTreeChilds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.killTreeChilds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove from tree node’s children</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.learnFromInstance">
+<code class="descname">learnFromInstance</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>weight</em>, <em>ht</em>, <em>parent</em>, <em>parentBranch</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.learnFromInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.learnFromInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the node with the provided instance and create alternate tree if significant change is detected in class distribution  .</p>
+<dl class="docutils">
+<dt>X: numpy.ndarray of length equal to the number of features.</dt>
+<dd>Instance attributes for updating the node.</dd>
+<dt>y: int</dt>
+<dd>Instance class.</dd>
+<dt>weight: float</dt>
+<dd>Instance weight.</dd>
+<dt>ht: Hoeffding Adaptive Tree</dt>
+<dd>Hoeffding Adaptive Tree to update.</dd>
+<dt>parent: HoeffdingTree.SplitNode or None</dt>
+<dd>The node’s parent.</dd>
+<dt>parent_branch: int</dt>
+<dd>The parent node’s branch</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.normalize">
+<code class="descname">normalize</code><span class="sig-paren">(</span><em>sum</em>, <em>dist</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalizes all numeric values in the given dataset (apart from the class attribute, if set). 
+The resulting values are by default in [0,1]</p>
+<dl class="docutils">
+<dt>dist: Dictionnary</dt>
+<dd>Instance values</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.numberLeaves">
+<code class="descname">numberLeaves</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaLearningNode.numberLeaves"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaLearningNode.numberLeaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode">
+<em class="property">class </em><code class="descname">AdaSplitNode</code><span class="sig-paren">(</span><em>split_test</em>, <em>class_observations</em>, <em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for a node that split the data in a hoeffding Adaptive tree
+Parameters
+———-
+:param split_test: used Instantiate Hoeffding Tree SplitNode class</p>
+<blockquote>
+<div>:type split_test:InstanceConditionalTest.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>class_observations</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a><em> (</em><em>class_value</em><em>, </em><em>weight</em><em>) or </em><em>None.</em>) – Class observations</li>
+<li><strong>size</strong> (<em>int.</em>) – Number of splits</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.calc_byte_size_including_subtree">
+<code class="descname">calc_byte_size_including_subtree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.calc_byte_size_including_subtree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.calc_byte_size_including_subtree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the size of the node including its subtree</p>
+<dl class="docutils">
+<dt>byteSize:int</dt>
+<dd>Size of the node and its subtree in bytes</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.filterInstanceToLeaves">
+<code class="descname">filterInstanceToLeaves</code><span class="sig-paren">(</span><em>X</em>, <em>myparent</em>, <em>parentBranch</em>, <em>updateSplitterCounts</em>, <em>foundNodes=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.filterInstanceToLeaves"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.filterInstanceToLeaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Travers down the tree to locate the corresponding leaf for an instance.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>X: Data instances.</dt>
+<dd><dl class="first last docutils">
+<dt>myparent:</dt>
+<dd><blockquote class="first">
+<div>Parent node.</div></blockquote>
+<dl class="docutils">
+<dt>parent_branch: Int</dt>
+<dd>Parent branch index</dd>
+</dl>
+<p class="last">updateSplitterCounts: Boolean
+FoundNode: List</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>X</strong> – </li>
+<li><strong>myparent</strong> – HoeffdingTree.Node</li>
+<li><strong>parentBranch</strong> – </li>
+<li><strong>updateSplitterCounts</strong> – </li>
+<li><strong>foundNodes</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.getErrorEstimation">
+<code class="descname">getErrorEstimation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.getErrorEstimation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.getErrorEstimation" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Get the skmultiflow ADWIN class distribution error estimation</div></blockquote>
+<dl class="docutils">
+<dt>num_of_leaves:int</dt>
+<dd>Number of node’s leaves</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.getErrorWidth">
+<code class="descname">getErrorWidth</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.getErrorWidth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.getErrorWidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the skmultiflow ADWIN class distribution error width
+Returns
+——-
+w:float</p>
+<blockquote>
+<div>error width</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.isNullError">
+<code class="descname">isNullError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.isNullError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.isNullError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify  skmultiflow ADWIN class distribution contains error 
+Returns
+——-
+self.estimationErrorWeight:boolean</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.killTreeChilds">
+<code class="descname">killTreeChilds</code><span class="sig-paren">(</span><em>ht</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.killTreeChilds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.killTreeChilds" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Remove from tree node’s children</div></blockquote>
+<dl class="docutils">
+<dt>ht: Hoeffding Adaptive Tree</dt>
+<dd>Hoeffding Adaptive Tree to remove childre.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.learnFromInstance">
+<code class="descname">learnFromInstance</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>weight</em>, <em>ht</em>, <em>parent</em>, <em>parent_branch</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.learnFromInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.learnFromInstance" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Update the node with the provided instance and create alternate tree if significant change is detected in class distribution  .</div></blockquote>
+<dl class="docutils">
+<dt>X: numpy.ndarray of length equal to the number of features.</dt>
+<dd>Instance attributes for updating the node.</dd>
+<dt>y: int</dt>
+<dd>Instance class.</dd>
+<dt>weight: float</dt>
+<dd>Instance weight.</dd>
+<dt>ht: Hoeffding Adaptive Tree</dt>
+<dd>Hoeffding Adaptive Tree to update.</dd>
+<dt>parent: HoeffdingTree.SplitNode or None</dt>
+<dd>The node’s parent.</dd>
+<dt>parent_branch: int</dt>
+<dd>The parent node’s branch</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.numberLeaves">
+<code class="descname">numberLeaves</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.numberLeaves"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.numberLeaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate number of node’s children leaves
+Returns
+——-
+:return num_of_leaves:Number of node’s leaves
+:type num_of_leaves:int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.number_leaves">
+<code class="descname">number_leaves</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.AdaSplitNode.number_leaves"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.AdaSplitNode.number_leaves" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Calculate number of node’s leaves</div></blockquote>
+<dl class="docutils">
+<dt>num_of_leaves:int</dt>
+<dd>Number of node’s leaves</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.NewNode">
+<em class="property">class </em><code class="descname">NewNode</code><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.NewNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.NewNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract Class whose methods are overridden by other subclasses methods</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.filterInstanceToLeaves">
+<code class="descname">filterInstanceToLeaves</code><span class="sig-paren">(</span><em>X</em>, <em>split_parent</em>, <em>parent_branch</em>, <em>update_splitter_counts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.filterInstanceToLeaves"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.filterInstanceToLeaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Travers down the tree to locate the corresponding leaf for an instance.</p>
+<p>X: Data instances.
+parent: HoeffdingTree.Node</p>
+<blockquote>
+<div>Parent node.</div></blockquote>
+<dl class="docutils">
+<dt>parent_branch: Int</dt>
+<dd>Parent branch index</dd>
+</dl>
+<p>updateSplitterCounts: Boolean
+nodes: List</p>
+<p>nodes: List</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.new_split_node">
+<code class="descname">new_split_node</code><span class="sig-paren">(</span><em>split_test</em>, <em>class_observations</em>, <em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.new_split_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.new_split_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new instance of the AdaSplitNode class</p>
+<blockquote>
+<div>initial_class_observations: ADWIN</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.partial_fit">
+<code class="descname">partial_fit</code><span class="sig-paren">(</span><em>X</em>, <em>y</em>, <em>classes=None</em>, <em>weight=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.partial_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.partial_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Incrementally trains the model. The weight of the instances re computed and passed to _partial_fit</p>
+<dl class="docutils">
+<dt>X: Numpy.ndarray of shape (n_samples, n_features)</dt>
+<dd>Data instances.</dd>
+<dt>y: Array-like</dt>
+<dd>Contains the classification targets for all samples in X.</dd>
+</dl>
+<p>classes: Not used.</p>
+<dl class="docutils">
+<dt>weight: Float or Array-like</dt>
+<dd>Instance weight. If not provided, uniform weights are assumed.</dd>
+</dl>
+<p>self</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoeffdingAdaptiveTree.html#HoeffdingAdaptiveTree.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#HoeffdingAdaptiveTree.HoeffdingAdaptiveTree.predict" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Predicts the label of the X instance(s)</dt>
+<dd>Parameters</dd>
+</dl>
+<dl class="docutils">
+<dt>X: numpy.ndarray of shape (n_samples, n_features)</dt>
+<dd>Samples for which we want to predict the labels.</dd>
+</dl>
+<dl class="docutils">
+<dt>list</dt>
+<dd>Predicted labels for all instances in X.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="Installation.html" class="btn btn-neutral" title="Installation and Testing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, IOT Stream Data Mining, Telecom Paristech<br>  Wilfried ZAKIE, Wafa Djerad, Kien DANG Trung
+
+    </p>
+  </div>
+  
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'02/2018',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

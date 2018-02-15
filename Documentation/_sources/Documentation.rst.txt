@@ -1,7 +1,0 @@
-
-Documentation
-===================================================
-
-.. automodule:: HoeffdingAdaptiveTree
-    :members:
-
