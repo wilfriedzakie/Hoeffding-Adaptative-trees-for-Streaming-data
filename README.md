@@ -1,6 +1,10 @@
 # Hoeffding Adaptative Tree for streaming data
 
+<<<<<<< HEAD
 #### Developed by Wilfried ZAKIE, Wafa Djerad && Kien DANG Trung
+=======
+#### Developed by Wilfried ZAKIE & Wafa Djerad 
+>>>>>>> a5939f9c0f24b1ef398cf8944214be50ac3b1f25
 
    A Hoeffding Adaptive tree is a decision tree-like algorithm which extends Hoeffding tree algorithm. 
 It's used for learning incrementally from data streams. 
