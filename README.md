@@ -13,7 +13,13 @@ The alternate tree can promoted if the tree decrease in accuracy compared to the
 See for details: [https://link.springer.com/chapter/10.1007/978-3-642-03915-7_22](https://link.springer.com/chapter/10.1007/978-3-642-03915-7_22)
 
 Documentation:
-Installation:
+
+
+Installation: This algorithm needs scikit Multiflow a stream data framework inspired by MOA and Weka
+![Scikit Logo](https://scikit-multiflow.github.io/scikit-multiflow/_images/skmultiflow-logo-wide.png)
+Format: ![Alt Text](url)
+
+
 
 
 Implementation based on: MOA: Massive Online Analysis; Journal of Machine Learning Research 11: 1601-1604
